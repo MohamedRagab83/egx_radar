@@ -611,6 +611,10 @@ def run_backtest(
                 allowed = allowed[:K.BT_DAILY_TOP_N]
 
             for gr in allowed:
+                # FIX-2: Skip new entries in NEUTRAL regime
+                # BULL=42% WR vs NEUTRAL=30% WR (235-trade backtest, March 2026)
+                if regime_tag == 'NEUTRAL' and len(open_trades) >= 1:
+                    continue
                 if len(open_trades) >= max_concurrent_trades:
                     break
                 r = gr.result

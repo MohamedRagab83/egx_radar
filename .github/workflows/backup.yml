@@ -1,0 +1,59 @@
+name: Backup to Google Drive
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install rclone
+        run: |
+          curl -fsSL https://rclone.org/install.sh | sudo bash
+          rclone version
+
+      - name: Configure rclone
+        run: |
+          mkdir -p ~/.config/rclone
+          echo "${{ secrets.RCLONE_CONFIG }}" > ~/.config/rclone/rclone.conf
+          chmod 600 ~/.config/rclone/rclone.conf
+
+      - name: Create backup archive
+        run: |
+          TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+          zip -r "egx_radar_backup_${TIMESTAMP}.zip" . \
+            -x ".git/*" \
+            -x ".venv/*" \
+            -x "__pycache__/*" \
+            -x "*.pyc" \
+            -x "*.bak" \
+            -x "*.tmp"
+          echo "BACKUP_FILE=egx_radar_backup_${TIMESTAMP}.zip" >> "$GITHUB_ENV"
+          ls -lh "egx_radar_backup_${TIMESTAMP}.zip"
+
+      - name: Upload to Google Drive
+        run: |
+          rclone copy "${{ env.BACKUP_FILE }}" gdrive:egx_radar_backups/ \
+            --progress \
+            --retries 3 \
+            --low-level-retries 10
+          echo "Uploaded ${{ env.BACKUP_FILE }} to gdrive:egx_radar_backups/"
+
+      - name: Prune old backups (keep last 30)
+        run: |
+          rclone lsf gdrive:egx_radar_backups/ --files-only | sort | head -n -30 | while read -r file; do
+            rclone deletefile "gdrive:egx_radar_backups/${file}" && echo "Deleted old backup: ${file}"
+          done
+
+      - name: Cleanup
+        if: always()
+        run: rm -f ~/.config/rclone/rclone.conf "${{ env.BACKUP_FILE }}"

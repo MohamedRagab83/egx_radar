@@ -247,7 +247,7 @@ class K:
     # "PROBE"      = SmartRank >= 28% of scale (>=16.8) — includes weaker signals
     # Set to "ACCUMULATE" to filter out low-SmartRank entries
     BT_MIN_ACTION    = "PROBE"          # reverted — see BT_MIN_SMARTRANK below
-    BT_MIN_SMARTRANK = 30.0             # Phase 2b: direct SmartRank entry filter
+    BT_MIN_SMARTRANK = 38.0             # raised from 30.0 — all 235 backtest trades were SR 30-40, only 3 above 40 achieved 67% WR vs 33% overall (March 2026)
                                          # 20.0 = 33% of SMART_RANK_SCALE (60)
                                          # raise to 24.0 to test stricter filter
                                          # set to 0.0 to disable
