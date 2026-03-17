@@ -1,0 +1,200 @@
+================================================================================
+DATABASE GAP FIX — CLOSED TRADES PERSISTENCE
+================================================================================
+
+Date: 2026-03-17
+Problem: oe_process_open_trades() resolved trades but never wrote outcomes to DB
+Solution: Added db.update_trade_outcome() call to persist resolved trades
+
+================================================================================
+FILE CHANGES SUMMARY
+================================================================================
+
+[1] egx_radar/database/manager.py
+    Line: 325 (after save_trade_signal() method)
+    Change: Added new method update_trade_outcome()
+    
+    Purpose: Update an existing open trade with exit information:
+      - Finds: most recent open trade matching symbol and entry_date (±1 day)
+      - Updates: exit_date, exit_price, pnl_pct, result, exit_reason
+      - Calculates: duration_minutes from entry to exit
+      - Handles: WIN/LOSS/TIMEOUT outcomes
+
+[2] egx_radar/outcomes/engine.py
+    Line: 376 (after oe_save_log(remaining))
+    Change: Added database write block in oe_process_open_trades()
+    
+    Purpose: Persist each resolved trade outcome to database
+      - Iterates: through batch of resolved trades
+      - Calls: db.update_trade_outcome() for each resolved trade
+      - Wraps: in try/except to prevent scanner crashes
+      - Logs: any individual trade failures but continues
+
+================================================================================
+WHAT THE FIX DOES
+================================================================================
+
+BEFORE (Original Code):
+  oe_process_open_trades()
+    ├─ Load open trades from trades_log.json
+    ├─ For each: Call oe_resolve_trade() → determines WIN/LOSS/TIMEOUT
+    ├─ Update STATE for AlphaMonitor (STATE.record_win/loss)
+    ├─ Call oe_save_history_batch(batch) → saves to trades_history.json
+    ├─ Call oe_save_log(remaining) → saves remaining open trades
+    └─ RETURN (no DB write for outcomes)
+    
+AFTER (With Fix):
+  oe_process_open_trades()
+    ├─ Load open trades from trades_log.json
+    ├─ For each: Call oe_resolve_trade() → determines WIN/LOSS/TIMEOUT
+    ├─ Update STATE for AlphaMonitor (STATE.record_win/loss)
+    ├─ Call oe_save_history_batch(batch) → saves to trades_history.json
+    ├─ Call oe_save_log(remaining) → saves remaining open trades
+    ├─ **NEW** For each resolved trade:
+    │   └─ Call db.update_trade_outcome() → updates SQLite with results
+    └─ RETURN
+
+================================================================================
+METHOD SIGNATURE: update_trade_outcome()
+================================================================================
+
+Location: egx_radar/database/manager.py line 329-397
+
+Signature:
+    def update_trade_outcome(
+        self,
+        symbol: str,
+        entry_date: datetime,
+        exit_date: datetime,
+        exit_price: float,
+        pnl_pct: float,
+        outcome: str,  # 'WIN', 'LOSS', 'TIMEOUT'
+        exit_reason: Optional[str] = None,
+    ) -> bool
+
+Behavior:
+    1. Finds the most recent OPEN trade (result IS NULL) matching:
+       - symbol
+       - entry_date (±1 day tolerance)
+       - result is None
+       
+    2. Updates the trade with:
+       - exit_date: When the trade was resolved
+       - exit_price: Price at resolution
+       - pnl_pct: Calculated P&L percentage
+       - pnl: Calculated from entry_price * pnl_pct / 100
+       - result: Derived from outcome ('win', 'loss', 'timeout')
+       - exit_reason: Why it exited (e.g., "Hit loss")
+       - duration_minutes: Calculated as (exit_date - entry_date) in minutes
+       
+    3. Returns:
+       - True if update successful
+       - False if no matching open trade found
+
+================================================================================
+CRITICAL IMPLEMENTATION DETAILS
+================================================================================
+
+Safety Wrap (engine.py lines 375-401):
+  try:
+      db = _get_db_manager()
+      if db is not None and batch:
+          for resolved_trade in batch:
+              try:
+                  # Update each trade
+              except Exception as trade_exc:
+                  log.debug(...)  # Log but continue
+  except Exception as db_exc:
+      log.debug(...)  # Log but continue
+  # If DB write fails, JSON is source of truth
+
+Non-Blocking Design:
+  ✓ Try/except wraps ALL database operations
+  ✓ If DB unavailable: Scanner continues, uses JSON fallback
+  ✓ If update fails: Individual trade logged but batch continues
+  ✓ JSON is always source of truth
+  ✓ Never crashes scanner due to DB failures
+
+Duplicate Prevention (manager.py lines 347-353):
+  Query filters for:
+    Trade.result.is_(None)  # Only open trades
+    entry_date ±1 day       # Time tolerance
+    symbol match            # Symbol match
+    order_by DESC           # Most recent first
+
+This prevents duplicate updates while handling timing edge cases.
+
+================================================================================
+LINEWISE DIFF SUMMARY
+================================================================================
+
+FILE: egx_radar/database/manager.py
+BEFORE:
+  Line 325:  return None
+  Line 326:  (empty line)
+  Line 327:  # ==================== SIGNALS ====================
+
+AFTER:
+  Line 325:  return None
+  Line 326:  (empty line)
+  Line 327:  def update_trade_outcome(
+  ...
+  Line 397:  (empty line)
+  Line 398:  # ==================== SIGNALS ====================
+
+  Added: 73 lines (new method update_trade_outcome)
+
+FILE: egx_radar/outcomes/engine.py
+BEFORE:
+  Line 371:  oe_save_history_batch(batch)
+  Line 372:  oe_save_log(remaining)
+  Line 373:  return remaining, wins, losses
+
+AFTER:
+  Line 371:  oe_save_history_batch(batch)
+  Line 372:  oe_save_log(remaining)
+  Line 373:  (empty line)
+  Line 374:  # Database write for resolved outcomes (new)
+  ...
+  Line 405:  return remaining, wins, losses
+  
+  Added: 35 lines (DB write block)
+
+TOTAL LINES ADDED: 108 (73 + 35)
+
+================================================================================
+VERIFICATION COMMAND TO RUN
+================================================================================
+
+After next scan, verify DB has resolved trades:
+
+  python -c "
+  import sys; sys.path.insert(0, '.')
+  from sqlalchemy import create_engine, text
+  
+  engine = create_engine('sqlite:///./egx_radar.db')
+  with engine.connect() as conn:
+      result = conn.execute(text('''
+          SELECT symbol, entry_price, exit_price, result, pnl_pct 
+          FROM trades 
+          WHERE result IS NOT NULL
+          LIMIT 10
+      '''))
+      for row in result:
+          print('{:10} entry={:8.2f} exit={:8.2f} result={:>8} pnl={:+7.2f}%'.format(
+              row[0], row[1], row[2], row[3], row[4]))
+  "
+
+================================================================================
+NOTES
+================================================================================
+
+• This fix is ADDITIVE: existing JSON logic unchanged
+• DB write only happens if DatabaseManager available
+• No new dependencies added
+• Backward compatible: trades without DB still work
+• AlphaMonitor already reads from JSON (unchanged)
+• Dashboard can now query DB for live resolved trades
+• All changes wrapped in try/except (non-critical)
+
+================================================================================

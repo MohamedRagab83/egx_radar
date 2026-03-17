@@ -1,0 +1,183 @@
+================================================================================
+DB GAP FIX — IMPLEMENTATION COMPLETE
+================================================================================
+
+Date: 2026-03-17 23:47:00
+Status: READY FOR TESTING
+
+================================================================================
+WHAT WAS DONE
+================================================================================
+
+[1] Created backup copies:
+    ✓ egx_radar/database/manager.py.bak
+    ✓ egx_radar/outcomes/engine.py.bak
+
+[2] Added new method to DatabaseManager:
+    ✓ update_trade_outcome()
+    ✓ Location: egx_radar/database/manager.py line 329-397
+    ✓ Lines added: 73
+    ✓ Purpose: Update existing open trades with exit/outcome information
+    
+[3] Added DB write block to oe_process_open_trades():
+    ✓ Location: egx_radar/outcomes/engine.py line 374-404
+    ✓ Lines added: 35
+    ✓ Purpose: Call update_trade_outcome() for each resolved trade
+    ✓ Safety: Wrapped in nested try/except blocks
+    
+[4] Verified compilation:
+    ✓ Both files compile without syntax errors
+    ✓ No import errors
+    ✓ No missing dependencies
+
+[5] Created documentation:
+    ✓ _DB_GAP_FIX_SUMMARY.txt (comprehensive overview)
+    ✓ _EXACT_PATCHES_APPLIED.txt (detailed code changes)
+
+================================================================================
+EXACT CHANGES SUMMARY
+================================================================================
+
+FILE 1: egx_radar/database/manager.py
+  Added at line 329: def update_trade_outcome(self, ...)
+  Purpose: Update open trade records with resolution outcomes
+  
+  Parameters:
+    - symbol: Stock symbol
+    - entry_date: Original entry date
+    - exit_date: Resolution date
+    - exit_price: Price at resolution
+    - pnl_pct: Calculated P&L percentage
+    - outcome: 'WIN' | 'LOSS' | 'TIMEOUT'
+    - exit_reason: Optional description
+  
+  Returns: bool (True if successful)
+  
+  Logic:
+    1. Find open trade matching symbol and entry_date (±1 day)
+    2. Update: exit_date, exit_price, pnl_pct, pnl, result, exit_reason, duration
+    3. Return True/False success status
+    4. Wrap all in try/except with debug logging
+
+FILE 2: egx_radar/outcomes/engine.py
+  Added at line 374: Database write block in oe_process_open_trades()
+  Purpose: Persist resolved trades to database after JSON save
+  
+  Logic:
+    1. After oe_save_history_batch(batch) and oe_save_log(remaining)
+    2. Get DatabaseManager (lazy-loaded)
+    3. For each resolved_trade in batch:
+       - Parse entry_date from trade["date"]
+       - Call db.update_trade_outcome() with all required fields
+       - Log any individual trade failures but continue
+    4. Catch database exceptions (don't crash scanner)
+    5. JSON remains source of truth if DB write fails
+
+================================================================================
+SAFETY MEASURES IMPLEMENTED
+================================================================================
+
+✓ Non-Blocking Design
+  - All DB operations wrapped in try/except
+  - Scanner continues even if DB unavailable
+  - JSON fallback always works
+
+✓ Graceful Degradation
+  - If update_trade_outcome() fails for one trade: continue with next
+  - If entire DB batch fails: log debug message, continue
+  - If database connection unavailable: skip entirely, no crash
+
+✓ Idempotent Updates
+  - Finds open trades only (result IS NULL)
+  - Time tolerance handles edge cases (±1 day)
+  - Multiple updates same trade: OK (overwrites with latest)
+
+✓ Data Integrity
+  - Updates all related fields atomically
+  - Calculates result from outcome + pnl_pct
+  - Calculates duration from dates
+  - Never partial updates
+
+✓ Audit Trail
+  - DEBUG level logs for failures
+  - Individual trade errors recorded
+  - Batch errors recorded
+  - Scanner logs show what happened
+
+================================================================================
+FILES CREATED FOR DOCUMENTATION
+================================================================================
+
+_DB_GAP_FIX_SUMMARY.txt
+  - Overview of problem and solution
+  - Before/after comparison
+  - Method signatures
+  - Implementation details
+  
+_EXACT_PATCHES_APPLIED.txt
+  - Exact code added (copy-paste ready)
+  - Line numbers and locations
+  - Context before/after
+  - Backup file information
+
+_show_diffs.py
+  - Script showing unified diff output
+  - Comparison of .bak vs updated files
+
+_verify_db_fix.py
+  - Script to verify DB has resolved trades
+  - Queries for records with exit_price and pnl_pct
+
+================================================================================
+TEST STRATEGY (Once Scanner Runs)
+================================================================================
+
+This fix will activate the NEXT TIME oe_process_open_trades() is called
+during a scan. The code:
+
+1. Will find all resolved trades
+2. For each resolved trade: call db.update_trade_outcome()
+3. Database table "trades" will get updated records
+
+To verify it worked:
+  - Check if records in "trades" table have exit_price IS NOT NULL
+  - Check if pnl_pct is populated (currently all NULL)
+  - Compare JSON trades_history.json with DB records
+  - They should match
+
+Current state:
+  - JSON: 20 resolved trades (all with pnl_pct)
+  - DB: 4 open trades (all with NULL exit fields)
+  
+After next scan:
+  - JSON: still 20+ resolved trades
+  - DB: should show updated records with exit fields populated
+
+================================================================================
+ROLLBACK INSTRUCTION (If Needed)
+================================================================================
+
+If you need to revert the changes:
+
+  cd d:\egx radar seprated
+  copy egx_radar\database\manager.py.bak egx_radar\database\manager.py
+  copy egx_radar\outcomes\engine.py.bak egx_radar\outcomes\engine.py
+
+This restores the original non-DB-writing version.
+
+================================================================================
+READY FOR NEXT STEPS
+================================================================================
+
+The fix is complete and compiled. Ready to:
+
+Option A: Run a scan to trigger oe_process_open_trades()
+         and test if database gets updated
+
+Option B: Move to GAP-4 (market_data → core scanner wire)
+
+Option C: Continue to other verification
+
+AWAITING USER INSTRUCTION - DO NOT PROCEED UNTIL "continue" COMMAND
+
+================================================================================

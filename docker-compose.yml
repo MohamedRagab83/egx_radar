@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  egx-radar:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: egx-radar-app
+    restart: unless-stopped
+    environment:
+      - WORKERS_COUNT=4
+      - MAX_BACKTEST_SECONDS=60
+      - LOG_LEVEL=INFO
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+      - ./egx_radar/config:/app/egx_radar/config
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import egx_radar; print('OK')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "10"
+    networks:
+      - egx-network
+    depends_on:
+      - prometheus
+
+  # Optional: Prometheus for monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: egx-radar-prometheus
+    restart: unless-stopped
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - egx-network
+
+  # Optional: Grafana for dashboards
+  grafana:
+    image: grafana/grafana:latest
+    container_name: egx-radar-grafana
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SERVER_ROOT_URL=http://localhost:3000
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - egx-network
+    depends_on:
+      - prometheus
+
+networks:
+  egx-network:
+    driver: bridge
+
+volumes:
+  prometheus_data:
+  grafana_data:

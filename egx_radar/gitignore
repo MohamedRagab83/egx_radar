@@ -1,0 +1,91 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# EGX Radar v2 — .gitignore
+# ═══════════════════════════════════════════════════════════════════════════
+
+# ── Runtime data files (backup to Google Drive separately) ─────────────────
+brain_state.db
+brain_state.json
+brain_state.tmp.json
+trades_log.json
+trades_history.json
+rejected_symbols.csv
+scan_snapshot.json
+source_settings.json
+paper_trading_tracker.xlsx
+
+# ── Database files ──────────────────────────────────────────────────────────
+egx_radar.db
+egx_radar.db-shm
+egx_radar.db-wal
+*.db
+*.sqlite
+*.sqlite3
+
+# ── Secrets & credentials ───────────────────────────────────────────────────
+.env
+.env.local
+.env.production
+config.env
+*.key
+*.pem
+secrets.json
+
+# ── Python cache ────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+.Python
+
+# ── Backup files (created by Claude Code / manual edits) ────────────────────
+*.bak
+*.tmp
+*.orig
+*.backup
+.egx_*
+
+# ── Virtual environments ────────────────────────────────────────────────────
+venv/
+env/
+.venv/
+.env/
+ENV/
+egx_env/
+
+# ── IDE & editor files ──────────────────────────────────────────────────────
+.vscode/settings.json
+.vscode/launch.json
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ── Logs ────────────────────────────────────────────────────────────────────
+*.log
+logs/
+egx_radar.log
+
+# ── Test artifacts ──────────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+test_trades_log*.json
+test_trades_log_pm*.json
+
+# ── Build artifacts ─────────────────────────────────────────────────────────
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# ── Jupyter (if used) ───────────────────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb
+
+# ── OS files ────────────────────────────────────────────────────────────────
+.DS_Store
+Desktop.ini
+$RECYCLE.BIN/

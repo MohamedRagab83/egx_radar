@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backtests - EGX Radar</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <span class="status-indicator"></span>
+            EGX Radar
+        </div>
+        <ul class="navbar-nav">
+            <li><a href="/" class="nav-link" data-page="dashboard">Dashboard</a></li>
+            <li><a href="/backtests" class="nav-link active" data-page="backtests">Backtests</a></li>
+            <li><a href="/trades" class="nav-link" data-page="trades">Trades</a></li>
+            <li><a href="/signals" class="nav-link" data-page="signals">Signals</a></li>
+            <li><a href="/settings" class="nav-link" data-page="settings">Settings</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <div class="header">
+            <h1>Backtests History</h1>
+            <p>Browse and analyze historical backtest results</p>
+        </div>
+
+        <div id="alerts"></div>
+
+        <div class="section">
+            <div class="section-header">
+                <h2 class="section-title">Backtest Results</h2>
+                <div class="btn-group">
+                    <input type="text" id="filter-symbol" placeholder="Filter by symbol" style="padding: 0.5rem; border: 1px solid #334155; border-radius: 0.375rem; background: #334155; color: #e2e8f0;">
+                    <input type="number" id="filter-days" placeholder="Days" value="30" style="padding: 0.5rem; border: 1px solid #334155; border-radius: 0.375rem; background: #334155; color: #e2e8f0; width: 100px;">
+                    <button class="secondary" id="btn-filter">Filter</button>
+                    <button id="btn-refresh">Refresh</button>
+                </div>
+            </div>
+            <div class="chart-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Date</th>
+                            <th>Symbols</th>
+                            <th>Trades</th>
+                            <th>Win Rate</th>
+                            <th>Sharpe</th>
+                            <th>Max Drawdown</th>
+                            <th>P&L</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="backtests-tbody">
+                        <tr>
+                            <td colspan="9" style="text-align: center; padding: 2rem;">
+                                <div class="loader"></div> Loading...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script>
+        const socket = io();
+        let currentFilter = { symbol: null, days: 30 };
+
+        async function loadBacktests() {
+            try {
+                let url = `/api/backtests?limit=100&days=${currentFilter.days}`;
+                if (currentFilter.symbol) {
+                    url += `&symbol=${currentFilter.symbol}`;
+                }
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                const tbody = document.getElementById('backtests-tbody');
+                tbody.innerHTML = '';
+                
+                if (!data.success || data.backtests.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 2rem;">No backtests found</td></tr>';
+                    return;
+                }
+                
+                data.backtests.forEach(bt => {
+                    const row = document.createElement('tr');
+                    const date = new Date(bt.date);
+                    row.innerHTML = `
+                        <td><small>${bt.id}</small></td>
+                        <td>${date.toLocaleDateString()} ${date.toLocaleTimeString()}</td>
+                        <td>${bt.symbols.join(', ')}</td>
+                        <td>${bt.trades}</td>
+                        <td><span class="badge ${bt.win_rate > 50 ? 'win' : 'loss'}">${bt.win_rate.toFixed(1)}%</span></td>
+                        <td>${bt.sharpe.toFixed(2)}</td>
+                        <td style="color: #ef4444">${(bt.max_drawdown * 100).toFixed(1)}%</td>
+                        <td style="color: ${bt.pnl > 0 ? '#22c55e' : '#ef4444'}">${bt.pnl > 0 ? '+' : ''}$${bt.pnl.toFixed(2)}</td>
+                        <td><button class="secondary" onclick="viewBacktest(${bt.id})">View</button></td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Error loading backtests:', error);
+            }
+        }
+
+        function viewBacktest(id) {
+            // TODO: Open backtest detail modal
+            console.log('View backtest:', id);
+        }
+
+        document.getElementById('btn-filter').addEventListener('click', function() {
+            currentFilter.symbol = document.getElementById('filter-symbol').value || null;
+            currentFilter.days = parseInt(document.getElementById('filter-days').value) || 30;
+            loadBacktests();
+        });
+
+        document.getElementById('btn-refresh').addEventListener('click', loadBacktests);
+
+        socket.on('connect', loadBacktests);
+        loadBacktests();
+        setInterval(loadBacktests, 30000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,2 @@
+[console_scripts]
+egx-radar = egx_radar.main:main

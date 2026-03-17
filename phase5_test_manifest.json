@@ -1,0 +1,114 @@
+{
+  "phase": 5,
+  "title": "Testing & Infrastructure",
+  "timestamp": "2026-03-16T21:09:38.571035",
+  "test_files": {
+    "conftest.py": {
+      "purpose": "Pytest fixtures and configuration",
+      "fixtures": [
+        "sample_ohlcv_data",
+        "clean_data_guard",
+        "momentum_guard",
+        "test_settings",
+        "backtest_engine",
+        "test_trade_data",
+        "performance_baseline"
+      ]
+    },
+    "test_unit_engine.py": {
+      "purpose": "Unit tests for backtest engine",
+      "test_classes": [
+        "TestBacktestEngineImports",
+        "TestMetricsCalculation",
+        "TestEngineConfiguration",
+        "TestDataGuardIntegration",
+        "TestMomentumGuardIntegration",
+        "TestErrorHandling",
+        "TestParallelProcessing"
+      ]
+    },
+    "test_integration_pipeline.py": {
+      "purpose": "Integration tests for full pipeline",
+      "test_classes": [
+        "TestBacktestPipeline",
+        "TestDataPipeline",
+        "TestGuardSequence",
+        "TestEndToEndBacktest",
+        "TestSymbolProcessing",
+        "TestProgressCallback"
+      ]
+    },
+    "test_performance_benchmarks.py": {
+      "purpose": "Performance and benchmark tests",
+      "test_classes": [
+        "TestPerformanceBenchmarks",
+        "TestParallelizationBenefit",
+        "TestMemoryUsage",
+        "TestConcurrencyScaling",
+        "TestLongRunningPerformance",
+        "TestCPUScaling"
+      ]
+    },
+    "test_data_validation.py": {
+      "purpose": "Data validation framework tests",
+      "test_classes": [
+        "TestDataValidator",
+        "TestMetricsValidation",
+        "TestValidationUtilities",
+        "TestQualityChecks"
+      ]
+    },
+    "test_error_handling.py": {
+      "purpose": "Error handling and recovery tests",
+      "test_classes": [
+        "TestErrorHandler",
+        "TestRecoveryStrategy",
+        "TestRetryManager",
+        "TestErrorStructure",
+        "TestGlobalErrorHandler",
+        "TestErrorSeverityLevels"
+      ]
+    }
+  },
+  "modules": {
+    "data_validator.py": {
+      "purpose": "Data validation framework",
+      "classes": [
+        "DataValidator",
+        "validate_dataset",
+        "validate_all_symbols",
+        "generate_validation_report"
+      ]
+    },
+    "error_handler.py": {
+      "purpose": "Error handling and recovery framework",
+      "classes": [
+        "ErrorSeverity",
+        "BacktestError",
+        "ErrorHandler",
+        "RetryManager",
+        "TimeoutManager",
+        "RecoveryStrategy"
+      ]
+    }
+  },
+  "ci_cd": {
+    "pipeline": ".github/workflows/ci.yml",
+    "jobs": [
+      "test",
+      "performance",
+      "lint",
+      "build"
+    ]
+  },
+  "metrics": {
+    "test_count": 60,
+    "test_classes": 27,
+    "coverage_targets": {
+      "engine": 90,
+      "metrics": 85,
+      "data_validation": 80,
+      "error_handling": 85
+    }
+  }
+}

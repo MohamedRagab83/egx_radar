@@ -1,0 +1,23 @@
+# EGX Radar v0.8.3 — Pinned Dependencies
+# Last verified: March 2026
+# Install: pip install -r requirements.txt
+
+# ── Core data ────────────────────────────────────────────────────────────
+yfinance>=0.2.40,<0.3
+pandas>=2.0,<3.0
+numpy>=1.24,<2.0
+
+# ── Technical analysis ───────────────────────────────────────────────────
+# WARNING: pandas_ta has known thread-safety issues in some versions.
+# After upgrading, test with SCAN_MAX_WORKERS=1 before going live.
+pandas_ta>=0.3.14b0
+
+# ── HTTP ─────────────────────────────────────────────────────────────────
+requests>=2.31,<3.0
+
+# ── UI ───────────────────────────────────────────────────────────────────
+# tkinter is bundled with Python 3.9+ — no pip install needed
+
+# ── Dev / test (optional) ────────────────────────────────────────────────
+# pytest>=7.0
+# pytest-mock>=3.0

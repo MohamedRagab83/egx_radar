@@ -1,0 +1,16 @@
+{
+  "status": "running SR=20.0 (2/3)",
+  "runs_done": 1,
+  "results": [
+    {
+      "sr": 0.0,
+      "trades": 930,
+      "wr": 32.4,
+      "pf": 1.33,
+      "dd": 117.4,
+      "sharpe": 0.74,
+      "total_ret": 934.65
+    }
+  ],
+  "error": null
+}

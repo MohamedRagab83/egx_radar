@@ -1,0 +1,220 @@
+================================================================================
+EXACT PATCHES APPLIED - DATABASE GAP FIX
+================================================================================
+
+PATCH 1: egx_radar/database/manager.py
+================================================================================
+
+Location: After line 325 (end of save_trade_signal method)
+Status: INSERT NEW METHOD
+
+Added 73 lines:
+
+    def update_trade_outcome(
+        self,
+        symbol: str,
+        entry_date: datetime,
+        exit_date: datetime,
+        exit_price: float,
+        pnl_pct: float,
+        outcome: str,  # 'WIN', 'LOSS', 'TIMEOUT'
+        exit_reason: Optional[str] = None,
+    ) -> bool:
+        """
+        Update an open trade with its resolution outcome.
+        
+        Finds the most recent open trade for the symbol and entry_date,
+        then updates it with exit information: exit_date, exit_price, pnl_pct,
+        result (calculated from pnl_pct), and exit_reason.
+        
+        Args:
+            symbol: Stock symbol
+            entry_date: Original entry date (used to match the trade)
+            exit_date: Date when trade was resolved
+            exit_price: Price at resolution
+            pnl_pct: P&L percentage
+            outcome: 'WIN', 'LOSS', or 'TIMEOUT'
+            exit_reason: Optional exit reason (hit stop, hit target, etc.)
+        
+        Returns:
+            True if update successful, False otherwise
+        """
+        try:
+            with self.get_session() as session:
+                # Find the open trade for this symbol and entry date
+                trade = session.query(Trade).filter(
+                    Trade.symbol == symbol,
+                    Trade.entry_date <= entry_date + timedelta(days=1),
+                    Trade.entry_date >= entry_date - timedelta(days=1),
+                    Trade.result.is_(None)  # Still open
+                ).order_by(Trade.entry_date.desc()).first()
+                
+                if not trade:
+                    return False
+                
+                # Update with outcome information
+                trade.exit_date = exit_date
+                trade.exit_price = exit_price
+                trade.pnl_pct = pnl_pct
+                trade.pnl = (trade.entry_price * pnl_pct / 100.0) if trade.entry_price else 0.0
+                
+                # Determine result from outcome
+                if outcome == "WIN":
+                    trade.result = "win"
+                elif outcome == "LOSS":
+                    trade.result = "loss"
+                elif outcome == "TIMEOUT":
+                    trade.result = "timeout" if pnl_pct < 0 else "win"
+                else:
+                    trade.result = "unknown"
+                
+                trade.exit_reason = exit_reason or ("Hit " + outcome.lower())
+                
+                # Calculate duration
+                if trade.exit_date and trade.entry_date:
+                    trade.duration_minutes = int(
+                        (trade.exit_date - trade.entry_date).total_seconds() / 60
+                    )
+                
+                session.merge(trade)
+            
+            return True
+        
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).debug(
+                "Failed to update trade outcome for %s: %s", symbol, e
+            )
+            return False
+
+
+================================================================================
+PATCH 2: egx_radar/outcomes/engine.py
+================================================================================
+
+Location: After line 372 (after oe_save_log(remaining))
+Status: INSERT NEW CODE BLOCK
+
+Added 35 lines:
+
+    # ── Database write for resolved outcomes (new) ─────────────────────────
+    # Update each resolved trade in the database with exit/outcome information
+    try:
+        db = _get_db_manager()
+        if db is not None and batch:
+            for resolved_trade in batch:
+                try:
+                    entry_date_str = resolved_trade.get("date", "")
+                    if entry_date_str:
+                        entry_dt = datetime.strptime(entry_date_str[:10], "%Y-%m-%d")
+                        db.update_trade_outcome(
+                            symbol=resolved_trade.get("sym", ""),
+                            entry_date=entry_dt,
+                            exit_date=datetime.strptime(
+                                resolved_trade.get("resolved_date", ""), "%Y-%m-%d"
+                            ) if resolved_trade.get("resolved_date") else datetime.utcnow(),
+                            exit_price=resolved_trade.get("exit_price", 0.0),
+                            pnl_pct=resolved_trade.get("pnl_pct", 0.0),
+                            outcome=resolved_trade.get("status", "TIMEOUT"),
+                            exit_reason="Hit " + resolved_trade.get("status", "").lower(),
+                        )
+                except Exception as trade_exc:
+                    log.debug("DB outcome update failed for %s: %s", 
+                              resolved_trade.get("sym"), trade_exc)
+    except Exception as db_exc:
+        log.debug("DB outcome batch update skipped: %s", db_exc)
+        # Never let DB failure break the outcome resolution — JSON is source of truth
+
+
+================================================================================
+CONTEXT: Before and After
+================================================================================
+
+BEFORE (engine.py lines 371-373):
+    oe_save_history_batch(batch)
+    oe_save_log(remaining)
+    return remaining, wins, losses
+
+AFTER (engine.py lines 371-405):
+    oe_save_history_batch(batch)
+    oe_save_log(remaining)
+    
+    # ── Database write for resolved outcomes (new) ─────────────────────────
+    # Update each resolved trade in the database with exit/outcome information
+    try:
+        ... (DATABASE UPDATE CODE) ...
+    except Exception as db_exc:
+        log.debug("DB outcome batch update skipped: %s", db_exc)
+    
+    return remaining, wins, losses
+
+================================================================================
+BACKUP FILES CREATED
+================================================================================
+
+egx_radar/database/manager.py.bak    (Original, line 325 ends at save_trade_signal)
+egx_radar/outcomes/engine.py.bak     (Original, line 373 has early return)
+
+These .bak files can be used to rollback if needed:
+  copy egx_radar\database\manager.py.bak egx_radar\database\manager.py
+  copy egx_radar\outcomes\engine.py.bak egx_radar\outcomes\engine.py
+
+================================================================================
+COMPILATION STATUS
+================================================================================
+
+Both files compile without syntax errors:
+  .venv\Scripts\python.exe -m py_compile egx_radar/outcomes/engine.py
+  .venv\Scripts\python.exe -m py_compile egx_radar/database/manager.py
+  
+Result: [OK] Both files compile without syntax errors
+
+================================================================================
+KEY DESIGN PRINCIPLES IN FIX
+================================================================================
+
+1. NON-BREAKING: If database unavailable, existing JSON logic unchanged
+   - DB write wrapped in try/except
+   - If KeyError on _get_db_manager(): continues
+   - If database connection fails: continues
+   - JSON is always fallback/source of truth
+
+2. IDEMPOTENT: Can be called multiple times without duplication
+   - Finds OPEN trades only (result IS NULL)
+   - Updates via session.merge() (upsert-like behavior)
+   - Time tolerance (±1 day) handles minor timing issues
+
+3. AUDIT TRAIL: Every failure logged at DEBUG level
+   - Individual trade failures don't stop batch
+   - DB unavailability doesn't crash scanner
+   - Logs appear in scanner output/logs
+
+4. DATA INTEGRITY: All fields updated together
+   - exit_date, exit_price, pnl_pct, pnl all set
+   - result calculated from outcome + pnl_pct
+   - duration_minutes calculated from dates
+   - exit_reason provided for diagnostic use
+
+================================================================================
+NEXT STEPS
+================================================================================
+
+After the next scan runs and oe_process_open_trades() executes:
+
+1. Query the database:
+   SELECT symbol, entry_price, exit_price, result, pnl_pct 
+   FROM trades 
+   WHERE exit_price IS NOT NULL
+
+   Should now show resolved trades with exit information.
+
+2. Verify JSON and DB are synced:
+   - JSON: trades_history.json should have 20+ resolved trades
+   - DB: trades table should have updated records
+   - Both should have matching pnl_pct values
+
+3. Check AlphaMonitor still works:
+   Python will load from trades_history.json as before
+   (No change to AlphaMonitor code)
+
+================================================================================

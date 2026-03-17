@@ -1,0 +1,15 @@
+Metadata-Version: 2.4
+Name: egx-radar
+Version: 0.8.0
+Summary: EGX Capital Flow Radar - Algorithmic Trading System
+Author: EGX Radar Team
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+Requires-Dist: pandas>=1.3.0
+Requires-Dist: pandas-ta>=0.3.0
+Requires-Dist: yfinance>=0.1.70
+Requires-Dist: requests>=2.26.0
+Provides-Extra: dev
+Requires-Dist: pytest>=6.0; extra == "dev"
+Requires-Dist: black>=21.0; extra == "dev"
+Requires-Dist: flake8>=3.9; extra == "dev"

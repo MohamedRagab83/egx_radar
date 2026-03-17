@@ -1,0 +1,45 @@
+# Runtime data — backup to Google Drive separately
+brain_state.db
+brain_state.json
+brain_state.tmp.json
+trades_log.json
+trades_history.json
+egx_radar.db
+egx_radar.db-shm
+egx_radar.db-wal
+scan_snapshot.json
+source_settings.json
+paper_trading_tracker.xlsx
+rejected_symbols.csv
+*.db
+*.sqlite
+
+# Secrets
+.env
+.env.local
+config.env
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Backup files
+*.bak
+*.tmp
+.egx_*
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/settings.json
+.idea/
+.DS_Store
+
+# Test artifacts
+.pytest_cache/
+test_trades_log*.json
