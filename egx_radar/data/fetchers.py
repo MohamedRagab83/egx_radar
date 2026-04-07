@@ -1,6 +1,11 @@
-"""Data fetchers: multi-source OHLCV and supporting helpers (Layer 2)."""
+"""Data fetchers: multi-source OHLCV and supporting helpers (Layer 2).
 
-import base64
+SECURITY NOTE (Phase 1 - Security Hardening):
+  API keys are now stored using OS-level keyring encryption.
+  Legacy base64 obfuscation functions are deprecated and removed.
+  See: egx_radar.utils.secrets for secure key management.
+"""
+
 import csv
 import json
 import logging
@@ -20,44 +25,86 @@ import pandas as pd
 import yfinance as yf
 
 from egx_radar.config.settings import K, DATA_SOURCE_CFG, _data_cfg_lock, SOURCE_SETTINGS_FILE
+from egx_radar.utils.secrets import secure_get_key, secure_set_key
+from egx_radar.utils.rate_limiter import get_rate_limiter
 
 log = logging.getLogger(__name__)
 
 
-def _obfuscate(key: str) -> str:
-    return base64.b64encode(key.encode()).decode() if key else ""
+# ── Rate limiter for API calls ────────────────────────────────────────────
+# PHASE 4: Replaced global lock + sleep with per-source token bucket algorithm.
+# Benefits:
+#   - Concurrent requests to different sources don't block each other
+#   - Proper burst handling within rate limits
+#   - No unnecessary sleep inside global locks
+#   - Better 429 response handling with exponential backoff
+_rate_limiter = get_rate_limiter()
 
 
-def _deobfuscate(enc: str) -> str:
-    if not enc:
-        return ""
-    try:
-        return base64.b64decode(enc.encode()).decode()
-    except Exception:
-        return enc
+def _rate_limit(source: str, timeout: float = 60.0) -> bool:
+    """Acquire rate limit permission for a source.
+    
+    PHASE 4: Uses token bucket algorithm instead of global lock + sleep.
+    
+    Args:
+        source: API source name (e.g., 'yahoo', 'twelve_data')
+        timeout: Maximum time to wait for token (default 60 seconds)
+        
+    Returns:
+        True if permission granted, False if timeout
+    """
+    return _rate_limiter.acquire(source, timeout=timeout)
 
 
 def load_source_settings() -> None:
+    """Load source configuration from JSON and retrieve API keys from keyring.
+    
+    SECURITY (Phase 1): API keys are retrieved from OS keyring, not JSON.
+    The JSON file only stores configuration flags, never secrets.
+    """
     if not os.path.exists(SOURCE_SETTINGS_FILE):
         return
     try:
         with open(SOURCE_SETTINGS_FILE, "r", encoding="utf-8") as f:
             saved = json.load(f)
-        saved["alpha_vantage_key"] = _deobfuscate(saved.get("alpha_vantage_key", ""))
-        saved["twelve_data_key"]   = _deobfuscate(saved.get("twelve_data_key",   ""))
+        
+        # SECURITY FIX: Retrieve API keys from OS keyring (not JSON)
+        # Legacy base64 deobfuscation removed - keys no longer stored in JSON
+        saved["alpha_vantage_key"] = secure_get_key("alpha_vantage") or ""
+        saved["twelve_data_key"]   = secure_get_key("twelve_data") or ""
+        
         with _data_cfg_lock:
             DATA_SOURCE_CFG.update(saved)
+            
+        log.info("Source settings loaded (API keys from secure keyring)")
     except Exception as e:
         log.warning("load_source_settings: %s", e)
 
 
 def save_source_settings() -> None:
+    """Save source configuration to JSON (API keys stored in keyring only).
+    
+    SECURITY (Phase 1): API keys are NEVER written to JSON files.
+    Keys are stored in OS-level encrypted credential storage.
+    """
     try:
         with _data_cfg_lock:
             snap = dict(DATA_SOURCE_CFG)
-        snap["alpha_vantage_key"] = _obfuscate(str(snap.get("alpha_vantage_key", "")))
-        snap["twelve_data_key"]   = _obfuscate(str(snap.get("twelve_data_key",   "")))
+        
+        # SECURITY FIX: Store API keys in OS keyring, NOT in JSON
+        # Remove keys from JSON snapshot to prevent accidental exposure
+        av_key = snap.pop("alpha_vantage_key", "")
+        td_key = snap.pop("twelve_data_key", "")
+        
+        # Store securely in OS keyring
+        if av_key:
+            secure_set_key("alpha_vantage", av_key)
+        if td_key:
+            secure_set_key("twelve_data", td_key)
+        
+        # JSON file contains only non-sensitive configuration
         _atomic_json_write(SOURCE_SETTINGS_FILE, snap)
+        log.info("Source settings saved (API keys in secure keyring)")
     except Exception as e:
         log.error("save_source_settings: %s", e)
 
@@ -179,6 +226,14 @@ def _chunker(lst: list, n: int):
 
 
 def _fetch_yahoo(yahoo_syms: List[str]) -> Dict[str, pd.DataFrame]:
+    """Fetch data from Yahoo Finance with rate limiting.
+    
+    PHASE 4: Uses token bucket rate limiter for non-blocking concurrent access.
+    """
+    if not _rate_limit("yahoo", timeout=60.0):
+        log.error("Yahoo rate limit timeout - skipping batch")
+        return {}
+    
     result: Dict[str, pd.DataFrame] = {}
     for chunk in _chunker(yahoo_syms, K.CHUNK_SIZE):
         for attempt in range(K.MAX_DOWNLOAD_RETRIES + 1):
@@ -209,6 +264,11 @@ def _fetch_yahoo(yahoo_syms: List[str]) -> Dict[str, pd.DataFrame]:
 
 
 def _fetch_stooq_single(sym: str) -> Optional[pd.DataFrame]:
+    """Fetch single symbol from Stooq with rate limiting."""
+    if not _rate_limit("stooq", timeout=30.0):
+        log.debug("Stooq rate limit timeout for %s", sym)
+        return None
+    
     url = f"https://stooq.com/q/d/l/?s={sym.lower()}.eg&i=d"
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
@@ -246,6 +306,11 @@ def _fetch_stooq(sym_list: List[str]) -> Dict[str, pd.DataFrame]:
 
 
 def _fetch_av_single(sym: str, api_key: str) -> Optional[pd.DataFrame]:
+    """Fetch single symbol from Alpha Vantage with rate limiting."""
+    if not _rate_limit("alpha_vantage", timeout=120.0):
+        log.debug("AlphaVantage rate limit timeout for %s", sym)
+        return None
+    
     url = (
         "https://www.alphavantage.co/query"
         f"?function=TIME_SERIES_DAILY_ADJUSTED&symbol={urllib.parse.quote(sym+'.CA')}"
@@ -361,20 +426,27 @@ def _fetch_td_single(sym: str, api_key: str) -> Optional[pd.DataFrame]:
 
 
 def _fetch_twelve_data(sym_list: List[str], api_key: str) -> Dict[str, pd.DataFrame]:
+    """Fetch data from Twelve Data with rate limiting.
+    
+    PHASE 4: Token bucket handles rate limiting - removed manual sleep.
+    The token bucket for twelve_data is configured to 8 req/min (0.133 req/sec).
+    """
+    if not _rate_limit("twelve_data", timeout=300.0):
+        log.error("Twelve Data rate limit timeout - skipping batch")
+        return {}
+    
     result: Dict[str, pd.DataFrame] = {}
     result_lock = threading.Lock()
 
     def _work(sym: str):
-        with _td_dispatch_lock:
-            time.sleep(K.TD_REQUEST_DELAY)
-            df = _fetch_td_single(sym, api_key)
+        df = _fetch_td_single(sym, api_key)
         if df is not None:
             with result_lock:
                 result[sym] = df
 
     with ThreadPoolExecutor(max_workers=K.TD_MAX_WORKERS) as pool:
         futs = [pool.submit(_work, s) for s in sym_list]
-        timeout = len(sym_list) * K.TD_REQUEST_DELAY + 30
+        timeout = len(sym_list) * 10 + 60  # More generous timeout
         for f in as_completed(futs, timeout=timeout):
             try:
                 f.result()
@@ -384,8 +456,9 @@ def _fetch_twelve_data(sym_list: List[str], api_key: str) -> Dict[str, pd.DataFr
 
 
 __all__ = [
-    "_obfuscate",
-    "_deobfuscate",
+    # Legacy exports removed (security hardening - Phase 1)
+    # "_obfuscate",      # DEPRECATED - insecure base64 obfuscation
+    # "_deobfuscate",    # DEPRECATED - insecure base64 deobfuscation
     "load_source_settings",
     "save_source_settings",
     "_atomic_json_write",

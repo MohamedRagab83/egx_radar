@@ -8,13 +8,13 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from egx_radar.dashboard.app import create_app
-from egx_radar.dashboard.websocket import socketio
+from egx_radar.dashboard.websocket import socketio, start_scan_broadcast
 
 
 def run_dashboard(host: str = '0.0.0.0', port: int = 5000, debug: bool = False):
     """
     Run the dashboard server.
-    
+
     Args:
         host: Server host address
         port: Server port
@@ -22,6 +22,9 @@ def run_dashboard(host: str = '0.0.0.0', port: int = 5000, debug: bool = False):
     """
     app = create_app(config_name='development' if debug else 'production')
     socketio.init_app(app)
+
+    # Start scan broadcast thread
+    start_scan_broadcast(interval_seconds=30)
     
     print(f"""
     ╔══════════════════════════════════════════════════════════╗

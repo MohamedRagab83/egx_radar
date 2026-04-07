@@ -1,10 +1,31 @@
 """Flask blueprints for API and dashboard routes."""
 
-from flask import Blueprint, jsonify, request, render_template, current_app
+from flask import (
+    Blueprint,
+    flash,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    url_for,
+    current_app,
+)
+from flask_login import current_user, login_required, login_user, logout_user
 from datetime import datetime, timedelta
 from typing import Dict, Any, List
 import json
 import os
+
+from egx_radar.database.models import User, ScanRun, ScanSignal
+from egx_radar.dashboard.telegram_service import (
+    build_connect_url,
+    connect_user_from_telegram_updates,
+    dispatch_latest_snapshot_alerts,
+    ensure_connect_token,
+    get_bot_username,
+    send_test_message,
+    telegram_ready,
+)
 
 
 # Create blueprints
@@ -34,12 +55,163 @@ def _load_scan_snapshot() -> list:
         return []
 
 
+def _load_latest_scan_signals() -> tuple[ScanRun | None, list[ScanSignal]]:
+    """Load the newest persisted scan results from the database."""
+    try:
+        with current_app.db_manager.get_session() as session:
+            latest_run = session.query(ScanRun).order_by(
+                ScanRun.timestamp.desc(),
+                ScanRun.id.desc(),
+            ).first()
+            if latest_run is None:
+                return None, []
+
+            signals = session.query(ScanSignal).filter(
+                ScanSignal.scan_run_id == latest_run.id
+            ).order_by(
+                ScanSignal.smart_rank.desc(),
+                ScanSignal.symbol.asc(),
+            ).all()
+            return latest_run, signals
+    except Exception:
+        return None, []
+
+
 # ==================== DASHBOARD ROUTES ====================
 
 @dashboard_bp.route('/')
-def dashboard():
-    """Main dashboard page."""
-    return render_template('dashboard.html')
+def home():
+    """Simple home redirect for the SaaS dashboard."""
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard.user_dashboard'))
+    return redirect(url_for('dashboard.login'))
+
+
+@dashboard_bp.route('/register', methods=['GET', 'POST'])
+def register():
+    """Create a simple user account."""
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard.user_dashboard'))
+
+    if request.method == 'POST':
+        email = (request.form.get('email') or '').strip().lower()
+        password = request.form.get('password') or ''
+
+        if not email:
+            flash('Email is required.', 'error')
+        elif not password:
+            flash('Password is required.', 'error')
+        elif len(password) < 8:
+            flash('Password must be at least 8 characters.', 'error')
+        else:
+            with current_app.db_manager.get_session() as session:
+                existing_user = session.query(User).filter(User.email == email).first()
+                if existing_user is not None:
+                    flash('This email is already registered.', 'error')
+                else:
+                    user = User(email=email)
+                    user.set_password(password)
+                    session.add(user)
+                    session.flush()
+                    login_user(user)
+                    flash('Account created successfully.', 'success')
+                    return redirect(url_for('dashboard.user_dashboard'))
+
+    return render_template('register.html')
+
+
+@dashboard_bp.route('/login', methods=['GET', 'POST'])
+def login():
+    """Log a user into the dashboard."""
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard.user_dashboard'))
+
+    if request.method == 'POST':
+        email = (request.form.get('email') or '').strip().lower()
+        password = request.form.get('password') or ''
+
+        with current_app.db_manager.get_session() as session:
+            user = session.query(User).filter(User.email == email).first()
+
+        if user is None or not user.check_password(password):
+            flash('Invalid email or password.', 'error')
+        else:
+            login_user(user)
+            flash('Logged in successfully.', 'success')
+            return redirect(url_for('dashboard.user_dashboard'))
+
+    return render_template('login.html')
+
+
+@dashboard_bp.route('/logout')
+@login_required
+def logout():
+    """Log the current user out."""
+    logout_user()
+    flash('You have been logged out.', 'success')
+    return redirect(url_for('dashboard.login'))
+
+
+@dashboard_bp.route('/dashboard')
+@login_required
+def user_dashboard():
+    """Simple authenticated dashboard page."""
+    latest_run, signals = _load_latest_scan_signals()
+    return render_template(
+        'user_dashboard.html',
+        latest_run=latest_run,
+        signals=signals,
+        telegram_ready=telegram_ready(),
+    )
+
+
+@dashboard_bp.route('/telegram/connect', methods=['GET', 'POST'])
+@login_required
+def telegram_connect():
+    """Connect the logged-in user to Telegram."""
+    token = ensure_connect_token(current_app.db_manager, current_user.id)
+    connect_url = build_connect_url(token)
+    bot_username = get_bot_username()
+
+    if request.method == 'POST':
+        connected = connect_user_from_telegram_updates(current_app.db_manager, current_user.id)
+        if connected:
+            flash('Telegram connected successfully.', 'success')
+            return redirect(url_for('dashboard.user_dashboard'))
+        flash('Telegram is not connected yet. Open the bot link, send /start, then try again.', 'error')
+
+    return render_template(
+        'telegram_connect.html',
+        telegram_ready=telegram_ready(),
+        token=token,
+        connect_url=connect_url,
+        bot_username=bot_username,
+    )
+
+
+@dashboard_bp.route('/telegram/test', methods=['POST'])
+@login_required
+def telegram_test():
+    """Send a simple test message to the logged-in user."""
+    if send_test_message(current_app.db_manager, current_user.id):
+        flash('Test Telegram message sent.', 'success')
+    else:
+        flash('Telegram test failed. Make sure your bot token is set and your account is connected.', 'error')
+    return redirect(url_for('dashboard.user_dashboard'))
+
+
+@dashboard_bp.route('/telegram/dispatch', methods=['POST'])
+@login_required
+def telegram_dispatch():
+    """Dispatch latest eligible alerts for the logged-in user only."""
+    summary = dispatch_latest_snapshot_alerts(current_app.db_manager, user_ids=[current_user.id])
+    if summary.get('sent', 0) > 0:
+        flash(f"Sent {summary['sent']} Telegram alert(s).", 'success')
+    elif summary.get('duplicates_skipped', 0) > 0:
+        flash('No new alerts sent. Today’s eligible alerts were already delivered.', 'success')
+    else:
+        flash('No eligible STRONG ACCUMULATE alerts found in the latest scanner snapshot.', 'error')
+    return redirect(url_for('dashboard.user_dashboard'))
 
 
 @dashboard_bp.route('/backtests')
@@ -380,23 +552,29 @@ def api_health():
 
 @api_bp.route('/market/price/<symbol>', methods=['GET'])
 def get_market_price(symbol: str):
-    """Get current market price for a symbol."""
+    """Get current price for a symbol from the latest scan snapshot."""  # Phase 8 — GAP-1 fix
     try:
-        from egx_radar.market_data import get_market_data_manager
-        
-        market_data = get_market_data_manager()
-        price = market_data.get_current_price(symbol)
-        
-        if price is None:
-            return jsonify({'success': False, 'error': f'Unable to fetch price for {symbol}'}), 400
-        
-        stats = market_data.get_price_stats(symbol)
-        
-        return jsonify({
-            'success': True,
-            'symbol': symbol,
+        snapshot = _load_scan_snapshot()  # Phase 8 — GAP-1 fix
+        result = next((r for r in snapshot if r.get('sym') == symbol), None)  # Phase 8 — GAP-1 fix
+
+        if result is None:
+            if not snapshot:
+                return jsonify({'status': 'no_scan_yet', 'message': 'Scanner has not completed a scan yet'}), 404  # Phase 8 — GAP-1 fix
+            return jsonify({'success': False, 'error': f'Symbol {symbol} not found in last scan'}), 404  # Phase 8 — GAP-1 fix
+
+        price = result.get('price', 0.0)  # Phase 8 — GAP-1 fix
+        return jsonify({  # Phase 8 — GAP-1 fix
+            'success':       True,
+            'symbol':        symbol,
             'current_price': price,
-            'stats': stats
+            'scan_time':     result.get('scan_time'),
+            'source':        'core_scanner_smartrank',
+            'stats': {
+                'entry':      result.get('entry', price),
+                'stop':       result.get('stop', 0.0),
+                'target':     result.get('target', 0.0),
+                'smart_rank': result.get('smart_rank', 0.0),
+            }
         }), 200
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -404,22 +582,25 @@ def get_market_price(symbol: str):
 
 @api_bp.route('/market/prices', methods=['POST'])
 def get_market_prices():
-    """Get current prices for multiple symbols."""
+    """Get current prices for multiple symbols from the latest scan snapshot."""  # Phase 8 — GAP-1 fix
     try:
-        from egx_radar.market_data import get_market_data_manager
-        
         data = request.get_json()
         symbols = data.get('symbols', [])
-        
+
         if not symbols:
             return jsonify({'success': False, 'error': 'No symbols provided'}), 400
-        
-        market_data = get_market_data_manager()
-        prices = market_data.get_multi_prices(symbols)
-        
-        return jsonify({
+
+        snapshot = _load_scan_snapshot()  # Phase 8 — GAP-1 fix
+        if not snapshot:
+            return jsonify({'status': 'no_scan_yet', 'message': 'Scanner has not completed a scan yet'}), 404  # Phase 8 — GAP-1 fix
+
+        snap_by_sym = {r.get('sym'): r for r in snapshot}  # Phase 8 — GAP-1 fix
+        prices = {sym: snap_by_sym[sym].get('price') if sym in snap_by_sym else None for sym in symbols}  # Phase 8 — GAP-1 fix
+
+        return jsonify({  # Phase 8 — GAP-1 fix
             'success': True,
-            'prices': prices
+            'source':  'core_scanner_smartrank',
+            'prices':  prices
         }), 200
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -480,19 +661,33 @@ def get_scanner_signals():
 
 @api_bp.route('/signals/generate/<symbol>', methods=['GET'])
 def generate_signal(symbol: str):
-    """Generate trading signal for a symbol."""
+    """Generate trading signal for a symbol using core scanner snapshot."""  # Phase 8 — GAP-1 fix
     try:
-        from egx_radar.market_data import get_signal_generator
-        
-        signal_gen = get_signal_generator()
-        signal = signal_gen.generate_signal(symbol)
-        
-        if signal is None:
-            return jsonify({'success': False, 'error': f'Unable to generate signal for {symbol}'}), 400
-        
-        return jsonify({
+        snapshot = _load_scan_snapshot()  # Phase 8 — GAP-1 fix
+        result = next((r for r in snapshot if r.get('sym') == symbol), None)  # Phase 8 — GAP-1 fix
+
+        if result is None:
+            if not snapshot:
+                return jsonify({'status': 'no_scan_yet', 'message': 'Scanner has not completed a scan yet'}), 404  # Phase 8 — GAP-1 fix
+            return jsonify({'success': False, 'error': f'Symbol {symbol} not found in last scan'}), 404  # Phase 8 — GAP-1 fix
+
+        return jsonify({  # Phase 8 — GAP-1 fix
             'success': True,
-            'signal': signal.to_dict()
+            'source':  'core_scanner_smartrank',
+            'signal': {
+                'symbol':       result.get('sym'),
+                'signal_type':  result.get('tag', 'hold'),
+                'strength':     'strong' if result.get('smart_rank', 0) >= 40 else 'moderate',
+                'timestamp':    result.get('scan_time'),
+                'entry_price':  result.get('entry', result.get('price', 0.0)),
+                'target_price': result.get('target'),
+                'stop_loss':    result.get('stop'),
+                'confidence':   result.get('confidence', 0.5),
+                'smart_rank':   result.get('smart_rank', 0.0),
+                'action':       result.get('action', 'WAIT'),
+                'direction':    result.get('direction', ''),
+                'sector':       result.get('sector', ''),
+            }
         }), 200
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -500,27 +695,43 @@ def generate_signal(symbol: str):
 
 @api_bp.route('/signals/batch', methods=['POST'])
 def generate_signals_batch():
-    """Generate signals for multiple symbols."""
+    """Generate signals for multiple symbols using core scanner snapshot."""  # Phase 8 — GAP-1 fix
     try:
-        from egx_radar.market_data import get_signal_generator
-        
         data = request.get_json()
         symbols = data.get('symbols', [])
-        
+
         if not symbols:
             return jsonify({'success': False, 'error': 'No symbols provided'}), 400
-        
-        signal_gen = get_signal_generator()
-        signals = signal_gen.generate_signals_batch(symbols)
-        
-        # Convert to dict, filtering out None values
-        signals_dict = {
-            symbol: sig.to_dict() if sig else None
-            for symbol, sig in signals.items()
-        }
-        
-        return jsonify({
+
+        snapshot = _load_scan_snapshot()  # Phase 8 — GAP-1 fix
+        if not snapshot:
+            return jsonify({'status': 'no_scan_yet', 'message': 'Scanner has not completed a scan yet'}), 404  # Phase 8 — GAP-1 fix
+
+        snap_by_sym = {r.get('sym'): r for r in snapshot}  # Phase 8 — GAP-1 fix
+        signals_dict = {}  # Phase 8 — GAP-1 fix
+        for sym in symbols:
+            r = snap_by_sym.get(sym)
+            if r:
+                signals_dict[sym] = {  # Phase 8 — GAP-1 fix
+                    'symbol':       r.get('sym'),
+                    'signal_type':  r.get('tag', 'hold'),
+                    'strength':     'strong' if r.get('smart_rank', 0) >= 40 else 'moderate',
+                    'timestamp':    r.get('scan_time'),
+                    'entry_price':  r.get('entry', r.get('price', 0.0)),
+                    'target_price': r.get('target'),
+                    'stop_loss':    r.get('stop'),
+                    'confidence':   r.get('confidence', 0.5),
+                    'smart_rank':   r.get('smart_rank', 0.0),
+                    'action':       r.get('action', 'WAIT'),
+                    'direction':    r.get('direction', ''),
+                    'sector':       r.get('sector', ''),
+                }
+            else:
+                signals_dict[sym] = None
+
+        return jsonify({  # Phase 8 — GAP-1 fix
             'success': True,
+            'source':  'core_scanner_smartrank',
             'signals': signals_dict
         }), 200
     except Exception as e:
@@ -529,19 +740,32 @@ def generate_signals_batch():
 
 @api_bp.route('/signals/history/<symbol>', methods=['GET'])
 def get_signal_history(symbol: str):
-    """Get signal history for a symbol."""
+    """Get signal history for a symbol from scanner snapshot."""  # Phase 8 — GAP-1 fix
     try:
-        from egx_radar.market_data import get_signal_generator
-        
         limit = request.args.get('limit', 100, type=int)
-        signal_gen = get_signal_generator()
-        signals = signal_gen.get_signal_history(symbol, limit=limit)
-        
-        return jsonify({
+        snapshot = _load_scan_snapshot()  # Phase 8 — GAP-1 fix
+        result = next((r for r in snapshot if r.get('sym') == symbol), None)  # Phase 8 — GAP-1 fix
+
+        signals = []
+        if result:
+            signals = [{  # Phase 8 — GAP-1 fix
+                'symbol':       result.get('sym'),
+                'signal_type':  result.get('tag', 'hold'),
+                'strength':     'strong' if result.get('smart_rank', 0) >= 40 else 'moderate',
+                'timestamp':    result.get('scan_time'),
+                'entry_price':  result.get('entry', result.get('price', 0.0)),
+                'target_price': result.get('target'),
+                'stop_loss':    result.get('stop'),
+                'confidence':   result.get('confidence', 0.5),
+                'smart_rank':   result.get('smart_rank', 0.0),
+                'source':       'core_scanner_smartrank',
+            }]
+
+        return jsonify({  # Phase 8 — GAP-1 fix
             'success': True,
-            'symbol': symbol,
-            'count': len(signals),
-            'signals': [s.to_dict() for s in signals]
+            'symbol':  symbol,
+            'count':   len(signals),
+            'signals': signals[:limit]
         }), 200
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -549,31 +773,14 @@ def get_signal_history(symbol: str):
 
 @api_bp.route('/alerts/history', methods=['GET'])
 def get_alerts():
-    """Get alert history."""
+    """Get alert history. (Alerts not yet wired to core scanner.)"""  # Phase 8 — GAP-1 fix
     try:
-        from egx_radar.market_data import get_notification_manager
-        
-        limit = request.args.get('limit', 50, type=int)
-        alert_type = request.args.get('type', None, type=str)
-        
-        notification_mgr = get_notification_manager()
-        
-        # Import AlertType if filtering by type
-        alerts = notification_mgr.get_alert_history(limit=limit)
-        
-        if alert_type:
-            from egx_radar.market_data import AlertType
-            try:
-                atype = AlertType(alert_type)
-                alerts = [a for a in alerts if a.alert_type == atype]
-            except ValueError:
-                pass
-        
-        return jsonify({
+        return jsonify({  # Phase 8 — GAP-1 fix
             'success': True,
-            'count': len(alerts),
-            'unread': notification_mgr.get_unread_count(),
-            'alerts': [a.to_dict() for a in alerts]
+            'count':   0,
+            'unread':  0,
+            'alerts':  [],
+            'note':    'Alerts will be populated once scanner alert integration is complete.',
         }), 200
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -581,19 +788,11 @@ def get_alerts():
 
 @api_bp.route('/alerts/mark-read', methods=['POST'])
 def mark_alerts_read():
-    """Mark alerts as read."""
+    """Mark alerts as read."""  # Phase 8 — GAP-1 fix
     try:
-        from egx_radar.market_data import get_notification_manager
-        
-        data = request.get_json()
-        count = data.get('count', 1)
-        
-        notification_mgr = get_notification_manager()
-        notification_mgr.mark_as_read(count)
-        
-        return jsonify({
+        return jsonify({  # Phase 8 — GAP-1 fix
             'success': True,
-            'unread': notification_mgr.get_unread_count()
+            'unread':  0,
         }), 200
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -601,23 +800,32 @@ def mark_alerts_read():
 
 @api_bp.route('/market/volatility/<symbol>', methods=['GET'])
 def get_volatility(symbol: str):
-    """Get intraday volatility for a symbol."""
+    """Get volatility proxy for a symbol from the latest scan snapshot."""  # Phase 8 — GAP-1 fix
     try:
-        from egx_radar.market_data import get_market_data_manager
-        
-        market_data = get_market_data_manager()
-        volatility = market_data.get_intraday_volatility(symbol)
-        
-        if volatility is None:
-            return jsonify({'success': False, 'error': f'Unable to calculate volatility for {symbol}'}), 400
-        
-        sentiment = market_data.get_sentiment_indicators(symbol)
-        
-        return jsonify({
-            'success': True,
-            'symbol': symbol,
-            'volatility_percent': volatility,
-            'sentiment': sentiment
+        snapshot = _load_scan_snapshot()  # Phase 8 — GAP-1 fix
+        result = next((r for r in snapshot if r.get('sym') == symbol), None)  # Phase 8 — GAP-1 fix
+
+        if result is None:
+            if not snapshot:
+                return jsonify({'status': 'no_scan_yet', 'message': 'Scanner has not completed a scan yet'}), 404  # Phase 8 — GAP-1 fix
+            return jsonify({'success': False, 'error': f'Symbol {symbol} not found in last scan'}), 404  # Phase 8 — GAP-1 fix
+
+        price = result.get('price') or 1.0  # avoid division by zero
+        target = result.get('target', price)
+        stop = result.get('stop', price)
+        volatility_pct = abs(target - stop) / price * 100 if price else 0.0  # Phase 8 — GAP-1 fix
+
+        return jsonify({  # Phase 8 — GAP-1 fix
+            'success':            True,
+            'symbol':             symbol,
+            'volatility_percent': round(volatility_pct, 4),
+            'source':             'core_scanner_smartrank',
+            'sentiment': {
+                'smart_rank': result.get('smart_rank', 0.0),
+                'direction':  result.get('direction', ''),
+                'action':     result.get('action', 'WAIT'),
+                'tag':        result.get('tag', ''),
+            }
         }), 200
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -627,6 +835,88 @@ def get_volatility(symbol: str):
 def not_found(error):
     """Handle 404 errors."""
     return jsonify({'success': False, 'error': 'Not found'}), 404
+
+
+@api_bp.route('/backtest/missed-trades', methods=['GET'])
+def get_missed_trade_analysis():
+    """Return missed trade intelligence analysis from the latest backtest."""
+    try:
+        from egx_radar.state.app_state import STATE
+        bt = getattr(STATE, "backtest_results", None) or {}
+        dashboard = bt.get("dashboard", {})
+        analysis = dashboard.get("missed_trade_analysis", {})
+        report_text = dashboard.get("missed_trade_report", "")
+        missed_info = dashboard.get("missed_trades", {})
+
+        if not analysis or analysis.get("total_missed", 0) == 0:
+            return jsonify({
+                'success': False,
+                'error': 'No missed trade data. Run a backtest first.',
+            }), 404
+
+        return jsonify({
+            'success': True,
+            'total_missed': analysis.get("total_missed", 0),
+            'missed_wins': analysis.get("missed_wins", 0),
+            'missed_losses': analysis.get("missed_losses", 0),
+            'missed_wins_pct': analysis.get("missed_wins_pct", 0.0),
+            'missed_losses_pct': analysis.get("missed_losses_pct", 0.0),
+            'avg_return_pct': analysis.get("avg_return_pct", 0.0),
+            'total_pnl_impact_pct': analysis.get("total_pnl_impact_pct", 0.0),
+            'quality_breakdown': analysis.get("quality_breakdown", {}),
+            'reason_breakdown': analysis.get("reason_breakdown", {}),
+            'sector_breakdown': analysis.get("sector_breakdown", {}),
+            'recommendations': analysis.get("recommendations", {}),
+            'report': report_text,
+        }), 200
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@api_bp.route('/backtest/tracking-dashboard', methods=['GET'])
+def get_tracking_dashboard():
+    """Return the full trade tracking dashboard from the latest backtest."""
+    try:
+        from egx_radar.state.app_state import STATE
+        bt = getattr(STATE, "backtest_results", None) or {}
+        trades = bt.get("trades", [])
+
+        # Also accept a CSV path via query param
+        csv_path = request.args.get('csv', None)
+
+        from egx_radar.backtest.tracking_dashboard import build_tracking_dashboard, format_dashboard_report, load_trades_from_csv
+
+        all_trades = list(trades)
+        if csv_path and os.path.exists(csv_path):
+            all_trades.extend(load_trades_from_csv(csv_path))
+
+        if not all_trades:
+            return jsonify({
+                'success': False,
+                'error': 'No trade data. Run a backtest first or provide a CSV path.',
+            }), 404
+
+        all_trades.sort(key=lambda t: t.get('exit_date', ''))
+        dashboard = build_tracking_dashboard(all_trades)
+        dashboard['text'] = format_dashboard_report(dashboard)
+
+        # Serialize equity curve and drawdown as lists of [date, value]
+        return jsonify({
+            'success': True,
+            'core_metrics': dashboard['core_metrics'],
+            'progress': dashboard['progress'],
+            'classification': dashboard['classification'],
+            'equity_curve': dashboard['equity_curve'],
+            'drawdown_series': dashboard['drawdown_series'],
+            'losing_streak': dashboard['losing_streak'],
+            'risk': dashboard['risk'],
+            'monthly': dashboard['monthly'],
+            'health_score': dashboard['health_score'],
+            'verdict': dashboard['verdict'],
+            'report': dashboard['text'],
+        }), 200
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 
 @api_bp.errorhandler(500)

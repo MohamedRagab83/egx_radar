@@ -27,6 +27,7 @@ __pycache__/
 
 # Backup files
 *.bak
+*.bak_*
 *.tmp
 .egx_*
 
@@ -39,7 +40,26 @@ env/
 .vscode/settings.json
 .idea/
 .DS_Store
+.codex/
+.qwen/
 
 # Test artifacts
 .pytest_cache/
 test_trades_log*.json
+
+# Logs
+*.log
+logs/
+
+# Local upload/temp folders
+.tmp.driveupload/
+
+# Local history / generated runtime exports
+history/
+archive/backups/
+archive/generated/backtests/
+archive/generated/logs/
+*.zip
+
+# Python build outputs
+*.egg-info/

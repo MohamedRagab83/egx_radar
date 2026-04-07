@@ -4,27 +4,29 @@ import json
 import logging
 import math
 import os
+import pathlib
+import tempfile
+import threading
 from datetime import datetime, date
 from typing import Dict, List, Optional, Tuple
-import pathlib
 
 import pandas as pd
 
 from egx_radar.config.settings import K, SYMBOLS
 from egx_radar.state.app_state import STATE
-from egx_radar.core.risk import compute_dynamic_stop
 from egx_radar.core.indicators import pct_change_safe
+from egx_radar.core.signal_engine import candle_hits_trigger
 
 log = logging.getLogger(__name__)
 
 _LOG_DIR = pathlib.Path(K.OUTCOME_LOG_FILE).parent
 _LOG_DIR.mkdir(parents=True, exist_ok=True)
-import threading
 _io_lock = threading.Lock()
 
 # ── Database integration (lazy-loaded) ──────────────────────────────────
 _DB_ENABLED = False
 _db_manager = None
+_db_init_lock = threading.Lock()
 
 
 def _get_db_manager():
@@ -34,6 +36,9 @@ def _get_db_manager():
     trades to the database. If the database is unavailable, the scanner
     continues using JSON logs as the fallback.
     
+    Thread-safe: uses _db_init_lock to prevent double-init from
+    concurrent scan threads.
+    
     Returns:
         DatabaseManager instance if available, None otherwise.
     """
@@ -41,22 +46,23 @@ def _get_db_manager():
     if _db_manager is not None:
         return _db_manager
     
-    try:
-        from egx_radar.database.manager import DatabaseManager
-        _db_manager = DatabaseManager()
-        _db_manager.init_db()
-        _DB_ENABLED = True
-        return _db_manager
-    except Exception as exc:
-        log.debug("DatabaseManager unavailable (%s) — using JSON only", exc)
-        _DB_ENABLED = False
-        return None
+    with _db_init_lock:
+        if _db_manager is not None:
+            return _db_manager
+        try:
+            from egx_radar.database.manager import DatabaseManager
+            _db_manager = DatabaseManager()
+            _db_manager.init_db()
+            _DB_ENABLED = True
+            return _db_manager
+        except Exception as exc:
+            log.debug("DatabaseManager unavailable (%s) — using JSON only", exc)
+            _DB_ENABLED = False
+            return None
 
 
 def _atomic_json_write(filepath: str, data: object) -> None:
     """Write JSON atomically: temp → os.replace()."""
-    import tempfile
-
     dirpath = os.path.dirname(os.path.abspath(filepath)) or "."
     fd, tmp = tempfile.mkstemp(dir=dirpath, suffix=".tmp", prefix=".egx_")
     try:
@@ -71,13 +77,94 @@ def _atomic_json_write(filepath: str, data: object) -> None:
         raise
 
 
+def _is_finite_number(value: object) -> bool:
+    return isinstance(value, (int, float)) and math.isfinite(float(value))
+
+
+def _canonical_resolved_status(status: object, pnl_pct: object) -> str:
+    """Keep terminal WIN/LOSS status aligned with realised pnl_pct.
+
+    This fixes the known case where a stop-managed trade can still finish
+    positive after a partial take-profit, which previously produced
+    status='LOSS' alongside pnl_pct > 0.
+    """
+    status_text = str(status or "").upper()
+    if status_text not in {"WIN", "LOSS"} or not _is_finite_number(pnl_pct):
+        return status_text
+
+    pnl_value = float(pnl_pct)
+    if pnl_value > 0:
+        return "WIN"
+    if pnl_value < 0:
+        return "LOSS"
+    return status_text
+
+
+def _trade_identity_key(trade: dict) -> Tuple[str, str, str, float]:
+    """Stable key for de-duplicating persisted trade history rows."""
+    trigger_or_entry = trade.get("trigger_price", trade.get("entry", 0.0))
+    key_price = round(float(trigger_or_entry or 0.0), 4)
+    return (
+        str(trade.get("sym", "") or ""),
+        str(trade.get("date", "") or ""),
+        str(trade.get("entry_date", "") or ""),
+        key_price,
+    )
+
+
+def _normalise_trade_record(trade: dict) -> dict:
+    """Backfill optional fields so old and new records share one schema."""
+    rec = dict(trade or {})
+
+    if rec.get("setup_type") in (None, "") and rec.get("action"):
+        rec["setup_type"] = rec.get("action")
+    if rec.get("trade_type") in (None, ""):
+        rec["trade_type"] = "UNCLASSIFIED"
+
+    score = rec.get("score")
+    smart_rank = rec.get("smart_rank")
+    if _is_finite_number(score):
+        rec["score"] = round(float(score), 2)
+    elif _is_finite_number(smart_rank):
+        rec["score"] = round(float(smart_rank), 2)
+
+    risk_used = rec.get("risk_used")
+    rec["risk_used"] = round(float(risk_used), 4) if _is_finite_number(risk_used) else 0.0
+
+    trigger_price = rec.get("trigger_price")
+    entry = rec.get("entry")
+    if _is_finite_number(trigger_price):
+        rec["trigger_price"] = round(float(trigger_price), 3)
+    elif _is_finite_number(entry):
+        rec["trigger_price"] = round(float(entry), 3)
+
+    if rec.get("fill_mode") in (None, ""):
+        rec["fill_mode"] = "next_candle_touch"
+
+    trailing_stop_pct = rec.get("trailing_stop_pct")
+    if not _is_finite_number(trailing_stop_pct):
+        rec["trailing_stop_pct"] = float(K.TRAILING_STOP_PCT)
+    else:
+        rec["trailing_stop_pct"] = round(float(trailing_stop_pct), 4)
+
+    pnl_pct = rec.get("pnl_pct")
+    if _is_finite_number(pnl_pct):
+        rec["pnl_pct"] = round(float(pnl_pct), 2)
+        if not _is_finite_number(rec.get("result_pct")):
+            rec["result_pct"] = rec["pnl_pct"]
+        rec["status"] = _canonical_resolved_status(rec.get("status"), rec["pnl_pct"])
+
+    return rec
+
+
 def oe_load_log() -> List[dict]:
     with _io_lock:
         if not os.path.exists(K.OUTCOME_LOG_FILE):
             return []
         try:
             with open(K.OUTCOME_LOG_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
+                raw = json.load(f)
+                return [_normalise_trade_record(t) for t in raw if isinstance(t, dict)]
         except (OSError, json.JSONDecodeError) as e:
             log.warning("oe_load_log: %s", e)
             return []
@@ -86,7 +173,7 @@ def oe_load_log() -> List[dict]:
 def oe_save_log(trades: List[dict]) -> None:
     with _io_lock:
         try:
-            _atomic_json_write(K.OUTCOME_LOG_FILE, trades)
+            _atomic_json_write(K.OUTCOME_LOG_FILE, [_normalise_trade_record(t) for t in trades])
         except OSError as e:
             log.error("oe_save_log: %s", e)
 
@@ -97,7 +184,8 @@ def _oe_load_history_unsafe() -> List[dict]:
         return []
     try:
         with open(K.OUTCOME_HISTORY_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
+            raw = json.load(f)
+            return [_normalise_trade_record(t) for t in raw if isinstance(t, dict)]
     except (OSError, json.JSONDecodeError) as e:
         log.warning("oe_load_history: %s", e)
         return []
@@ -113,7 +201,18 @@ def oe_save_history_batch(new_trades: List[dict]) -> None:
         return
     with _io_lock:
         history = _oe_load_history_unsafe()
-        history.extend(new_trades)
+        seen = {_trade_identity_key(t) for t in history}
+        appended = 0
+        for trade in new_trades:
+            norm = _normalise_trade_record(trade)
+            trade_key = _trade_identity_key(norm)
+            if trade_key in seen:
+                continue
+            history.append(norm)
+            seen.add(trade_key)
+            appended += 1
+        if appended == 0:
+            return
         try:
             _atomic_json_write(K.OUTCOME_HISTORY_FILE, history)
         except OSError as e:
@@ -134,13 +233,8 @@ def _normalise_df_index(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def oe_resolve_trade(trade: dict, df: Optional[pd.DataFrame]) -> Optional[dict]:
-    """Resolve a trade against forward price data. Returns resolved dict or None if still open."""
+    """Resolve a logged signal using the same next-candle trigger logic as the backtest."""
     if df is None or df.empty:
-        return None
-    entry  = trade.get("entry", 0.0)
-    stop   = trade.get("stop", 0.0)
-    target = trade.get("target", 0.0)
-    if entry <= 0:
         return None
 
     try:
@@ -149,117 +243,149 @@ def oe_resolve_trade(trade: dict, df: Optional[pd.DataFrame]) -> Optional[dict]:
         log.warning("oe_resolve_trade normalise error: %s", e)
         return None
 
-    # Stale trade: beyond scaled lookforward
-    try:
-        trade_date_str = trade.get("date", "")
-        if not trade_date_str:
-            return None
-        trade_date = datetime.strptime(trade_date_str[:10], "%Y-%m-%d")
-        age = (datetime.now() - trade_date).days
-        if age > K.OUTCOME_LOOKFORWARD_DAYS * K.OUTCOME_STALE_MULTIPLIER:
-            try:
-                last_close = float(df["Close"].iloc[-1])
-            except (IndexError, ValueError):
-                last_close = entry
-            resolved = dict(trade)
-            resolved.update({
-                "status": "TIMEOUT",
-                "exit_price": round(last_close, 3),
-                "days_held": age, "mfe_pct": 0.0, "mae_pct": 0.0,
-                "pnl_pct": round(pct_change_safe(last_close, entry), 2),
-                "resolved_date": datetime.now().strftime("%Y-%m-%d"),
-            })
-            return resolved
-    except (ValueError, TypeError):
-        pass
+    trade_date_str = trade.get("date", "")
+    if not trade_date_str:
+        return None
 
     try:
-        entry_dt  = pd.Timestamp(trade.get("date", ""))
-        positions = [i for i, d in enumerate(df.index) if d >= entry_dt]
-        if not positions:
-            return None
-        start = positions[0]
-    except (ValueError, TypeError, KeyError) as e:
+        signal_dt = pd.Timestamp(trade_date_str[:10])
+    except (ValueError, TypeError) as e:
         log.warning("oe_resolve_trade date parse error for %s: %s", trade.get("sym"), e)
         return None
 
-    window = df.iloc[start:start + K.OUTCOME_LOOKFORWARD_DAYS + 1]
+    future_positions = [i for i, d in enumerate(df.index) if d > signal_dt]
+    if not future_positions:
+        return None
+
+    activation_idx = future_positions[0]
+    activation_date = df.index[activation_idx]
+    activation_row = df.iloc[activation_idx]
+    trigger_price = float(trade.get("trigger_price") or trade.get("entry") or 0.0)
+    if trigger_price <= 0:
+        return None
+
+    next_open = float(activation_row["Open"])
+    next_high = float(activation_row["High"])
+    if not candle_hits_trigger(next_high, trigger_price):
+        resolved = dict(trade)
+        resolved.update({
+            "status": "MISSED",
+            "entry_date": activation_date.strftime("%Y-%m-%d"),
+            "trigger_price": round(trigger_price, 3),
+            "next_open": round(next_open, 3),
+            "next_high": round(next_high, 3),
+            "days_held": 0,
+            "mfe_pct": 0.0,
+            "mae_pct": 0.0,
+            "pnl_pct": 0.0,
+            "result_pct": 0.0,
+            "stop_hit": False,
+            "resolved_date": datetime.now().strftime("%Y-%m-%d"),
+            "fill_mode": "next_candle_touch",
+        })
+        return resolved
+
+    entry = round(trigger_price * (1.0 + K.BT_SLIPPAGE_PCT / 2.0), 3)
+    stop = float(trade.get("stop") or (entry * (1.0 - K.MAX_STOP_LOSS_PCT)))
+    stop = min(stop, entry * 0.995)
+    if stop >= entry:
+        stop = entry * (1.0 - K.MAX_STOP_LOSS_PCT)
+    target = float(trade.get("target") or (entry * (1.0 + K.POSITION_MAIN_TP_PCT)))
+    partial_target = float(trade.get("partial_target") or (entry * (1.0 + K.PARTIAL_TP_PCT)))
+    trailing_trigger = float(trade.get("trailing_trigger") or (entry * (1.0 + K.TRAILING_TRIGGER_PCT)))
+    trailing_stop_pct = float(trade.get("trailing_stop_pct") or K.TRAILING_STOP_PCT)
+
+    window = df.iloc[activation_idx:activation_idx + K.OUTCOME_LOOKFORWARD_DAYS + 1]
     if len(window) < K.OUTCOME_MIN_BARS_NEEDED:
         return None
 
-    highs  = window["High"].values
-    lows   = window["Low"].values
-    closes = window["Close"].values
-    
-    # Needs a 5-bar momentum lookback from the start. We can use the main df for this.
-    try:
-        start_idx_in_df = df.index.get_loc(window.index[0])
-    except KeyError as e:
-        log.warning("oe_resolve_trade index missing: %s", e)
-        start_idx_in_df = 5  # fallback
-        
-    outcome = "OPEN"
-    exit_bar = len(window) - 1
-    mfe = mae = 0.0
-    
-    # Action type
-    is_short = trade.get("action", "").lower() == "sell" or trade.get("tag", "").lower() == "sell"
-    current_stop = stop
-    current_target = target
+    outcome = None
+    exit_price = None
+    bars_held = 0
+    mfe = 0.0
+    mae = 0.0
+    partial_taken = False
+    partial_exit_price = None
+    trailing_active = False
+    trailing_anchor = entry
 
-    for i, (h, l, c) in enumerate(zip(highs, lows, closes)):
-        mfe = max(mfe, pct_change_safe(h, entry))
-        mae = max(mae, -pct_change_safe(l, entry))
-        
-        # Calculate trailing metrics
-        df_idx = start_idx_in_df + i
-        if df_idx >= 5:
-            past_c = df["Close"].iloc[df_idx - 5]
-            momentum = pct_change_safe(c, past_c)
+    for ts, row in window.iterrows():
+        open_px = float(row["Open"])
+        high = float(row["High"])
+        low = float(row["Low"])
+        close = float(row["Close"])
+        bars_held += 1
+
+        mfe = max(mfe, pct_change_safe(high, entry))
+        mae = max(mae, -pct_change_safe(low, entry))
+
+        if open_px <= stop:
+            exit_price = round(open_px * (1.0 - K.BT_SLIPPAGE_PCT / 2.0), 3)
+            outcome = "LOSS"
+        elif low <= stop:
+            exit_price = round(stop * (1.0 - K.BT_SLIPPAGE_PCT / 2.0), 3)
+            outcome = "LOSS"
         else:
-            momentum = 0.0
-            
-        # Simplified regime flag for trailing: ADX > 25 and close > EMA50 (approximate MOMENTUM)
-        # We don't have full ADX here nicely in arrays, so we use momentum proxy
-        pseudo_regime = "MOMENTUM" if momentum > 2.5 else "NEUTRAL"
-        
-        current_stop, current_target, _ = compute_dynamic_stop(
-            current_price=c,
-            entry=entry,
-            current_stop=current_stop,
-            current_target=current_target,
-            momentum=momentum,
-            regime=pseudo_regime,
-            is_short=is_short
-        )
-        
-        if is_short:
-            if h >= current_stop:
-                outcome, exit_bar = "LOSS", i; break
-            if l <= current_target:
-                outcome, exit_bar = "WIN", i; break
-        else:
-            if l <= current_stop:
-                outcome, exit_bar = "LOSS", i; break
-            if h >= current_target:
-                outcome, exit_bar = "WIN", i;  break
+            if (not partial_taken) and high >= partial_target:
+                partial_taken = True
+                partial_exit_price = round(partial_target * (1.0 - K.BT_SLIPPAGE_PCT / 2.0), 3)
+                stop = max(stop, entry)
 
-    if outcome == "OPEN" and len(window) >= K.OUTCOME_LOOKFORWARD_DAYS:
-        outcome, exit_bar = "TIMEOUT", len(window) - 1
+            if high >= trailing_trigger:
+                trailing_active = True
+                trailing_anchor = max(trailing_anchor, high)
 
-    if outcome == "OPEN":
-        return None
+            if trailing_active:
+                stop = max(stop, trailing_anchor * (1.0 - trailing_stop_pct))
 
-    exit_price = closes[min(exit_bar, len(closes) - 1)]
-    resolved   = dict(trade)
+            if high >= target:
+                exit_price = round(target * (1.0 - K.BT_SLIPPAGE_PCT / 2.0), 3)
+                outcome = "WIN"
+            elif bars_held >= K.OUTCOME_LOOKFORWARD_DAYS:
+                exit_price = round(close * (1.0 - K.BT_SLIPPAGE_PCT / 2.0), 3)
+                outcome = "TIMEOUT"
+
+        if outcome is not None:
+            exit_date = ts
+            break
+
+    if outcome is None:
+        age = (datetime.now() - datetime.strptime(trade_date_str[:10], "%Y-%m-%d")).days
+        if age <= K.OUTCOME_LOOKFORWARD_DAYS * K.OUTCOME_STALE_MULTIPLIER:
+            return None
+        exit_date = window.index[-1]
+        exit_price = round(float(window.iloc[-1]["Close"]) * (1.0 - K.BT_SLIPPAGE_PCT / 2.0), 3)
+        outcome = "TIMEOUT"
+
+    partial_return_pct = 0.0
+    partial_fraction = float(K.PARTIAL_EXIT_FRACTION)
+    if partial_taken and partial_exit_price:
+        partial_return_pct = partial_fraction * ((partial_exit_price - entry) / max(entry, 1e-9) * 100.0)
+    remaining_fraction = (1.0 - partial_fraction) if partial_taken else 1.0
+    remaining_return_pct = remaining_fraction * ((exit_price - entry) / max(entry, 1e-9) * 100.0)
+    gross_return_pct = partial_return_pct + remaining_return_pct
+    pnl_pct = gross_return_pct - (K.BT_FEES_PCT * 100.0)
+    resolved_status = _canonical_resolved_status(outcome, pnl_pct)
+
+    resolved = dict(trade)
     resolved.update({
-        "status":     outcome,
+        "status": resolved_status,
+        "entry": entry,
+        "entry_date": activation_date.strftime("%Y-%m-%d"),
+        "trigger_price": round(trigger_price, 3),
         "exit_price": round(float(exit_price), 3),
-        "days_held":  exit_bar + 1,
-        "mfe_pct":    round(mfe, 2),
-        "mae_pct":    round(mae, 2),
-        "pnl_pct":    round(pct_change_safe(float(exit_price), entry), 2),
+        "days_held": bars_held,
+        "mfe_pct": round(mfe, 2),
+        "mae_pct": round(mae, 2),
+        "pnl_pct": round(pnl_pct, 2),
+        "result_pct": round(pnl_pct, 2),
+        "stop_hit": outcome == "LOSS",
         "resolved_date": datetime.now().strftime("%Y-%m-%d"),
+        "fill_mode": "next_candle_touch",
+        "partial_taken": partial_taken,
+        "trade_type": trade.get("trade_type", "UNCLASSIFIED"),
+        "score": round(float(trade.get("score", trade.get("smart_rank", 0.0))), 2),
+        "risk_used": round(float(trade.get("risk_used") or 0.0), 4),
     })
 
     # Feed breakout result back to MomentumGuard for fatigue tracking
@@ -285,6 +411,13 @@ def oe_record_signal(
     atr: float, smart_rank: float, anticipation: float, action: str,
     existing_trades: Optional[List[dict]] = None,
     tag: str = "",
+    trade_type: str = "UNCLASSIFIED",
+    score: float = 0.0,
+    risk_used: float = 0.0,
+    trigger_price: Optional[float] = None,
+    partial_target: Optional[float] = None,
+    trailing_trigger: Optional[float] = None,
+    trailing_stop_pct: Optional[float] = None,
 ) -> None:
     today_str = datetime.now().strftime("%Y-%m-%d")
     trades    = existing_trades if existing_trades is not None else oe_load_log()
@@ -297,12 +430,20 @@ def oe_record_signal(
         "atr": round(atr, 3) if (atr is not None and math.isfinite(atr)) else 0.0,
         "smart_rank": round(smart_rank, 2) if (smart_rank is not None and math.isfinite(smart_rank)) else 0.0,
         "anticipation": round(anticipation, 2) if (anticipation is not None and math.isfinite(anticipation)) else 0.0,
-        "action": action, "status": "OPEN",
+        "action": action, "status": "PENDING_TRIGGER",
         # Fields for alpha_monitor (populated here or at resolution)
         "setup_type": tag or action,  # signal tag (ultra/early/buy/watch)
         "exit_price": None,           # set by oe_resolve_trade()
         "result_pct": None,           # set by oe_resolve_trade()
         "stop_hit": None,             # set by oe_resolve_trade() → True if status=="LOSS"
+        "trade_type": trade_type,
+        "score": round(score, 2) if (score is not None and math.isfinite(score)) else 0.0,
+        "risk_used": round(risk_used, 4) if (risk_used is not None and math.isfinite(risk_used)) else 0.0,
+        "trigger_price": round(trigger_price if trigger_price is not None else entry, 3),
+        "partial_target": round(partial_target, 3) if partial_target else None,
+        "trailing_trigger": round(trailing_trigger, 3) if trailing_trigger else None,
+        "trailing_stop_pct": round(trailing_stop_pct, 4) if trailing_stop_pct else K.TRAILING_STOP_PCT,
+        "fill_mode": "next_candle_touch",
     })
     oe_save_log(trades)
     
@@ -341,6 +482,26 @@ def oe_process_open_trades(all_data: Dict[str, pd.DataFrame]) -> Tuple[List[dict
         sym   = trade.get("sym", "")
         yahoo = SYMBOLS.get(sym)
         df    = all_data.get(yahoo) if yahoo else None
+
+        # Fix: outcomes resolution — fallback for symbols not in SYMBOLS (e.g. delisted, typo,
+        # or symbols added/removed since the trade was recorded). Attempt a direct yfinance
+        # fetch so the trade can still be resolved rather than staying OPEN indefinitely.
+        if df is None and sym:
+            try:
+                import yfinance as yf
+                _yf_sym = (yahoo or sym) + (".CA" if not sym.endswith(".CA") else "")
+                _yf_df = yf.download(_yf_sym, period="3mo", auto_adjust=True, progress=False)
+                if _yf_df is not None and not _yf_df.empty:
+                    df = _yf_df
+                    log.debug("outcomes fallback fetch OK: %s → %s (%d bars)", sym, _yf_sym, len(df))
+                else:
+                    # Try without .CA suffix
+                    _yf_df2 = yf.download(yahoo or sym, period="3mo", auto_adjust=True, progress=False)
+                    if _yf_df2 is not None and not _yf_df2.empty:
+                        df = _yf_df2  # Fix: outcomes resolution
+            except Exception as _yf_exc:
+                log.debug("outcomes fallback fetch failed for %s: %s", sym, _yf_exc)
+
         resolved = oe_resolve_trade(trade, df)
         if resolved is None:
             remaining.append(trade)
@@ -447,6 +608,9 @@ def oe_save_daily_scan(results: list, scan_date: str = None) -> str:
             "sector":      r.get("sector", ""),
             "price":       r.get("price", 0.0),
             "action":      plan.get("action", "WAIT"),
+            "trade_type":  plan.get("trade_type", "SKIP"),
+            "score":       round(plan.get("score", r.get("smart_rank", 0.0)), 2),
+            "risk_used":   round(plan.get("risk_used", 0.0), 4),
             "signal":      r.get("signal", ""),
             "smart_rank":  round(r.get("smart_rank", 0.0), 2),
             "confidence":  round(r.get("confidence", 0.0), 1),
@@ -454,6 +618,7 @@ def oe_save_daily_scan(results: list, scan_date: str = None) -> str:
             "rsi":         round(r.get("rsi", 0.0), 1),
             "adx":         round(r.get("adx", 0.0), 1),
             "entry":       round(plan.get("entry", 0.0), 2),
+            "trigger_price": round(plan.get("trigger_price", r.get("trigger_price", 0.0)), 2),
             "stop":        round(plan.get("stop", 0.0), 2),
             "target":      round(plan.get("target", 0.0), 2),
             "rr":          plan.get("rr", 0.0),

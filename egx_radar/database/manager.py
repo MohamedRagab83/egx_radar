@@ -13,6 +13,7 @@ from sqlalchemy.pool import StaticPool
 from egx_radar.database.models import (
     Base, BacktestResult, Trade, Signal, StrategyMetrics, EquityHistory
 )
+from egx_radar.utils.trade_id import generate_trade_uid
 
 
 class DatabaseManager:
@@ -206,9 +207,23 @@ class DatabaseManager:
         pnl: Optional[float] = None,
         pnl_pct: Optional[float] = None
     ) -> int:
-        """Save individual trade. Returns trade ID."""
+        """Save individual trade. Returns trade ID.
+        
+        DATA INTEGRITY (Phase 2): Generates deterministic trade_uid to prevent
+        duplicate trades and ensure accurate outcome attribution.
+        """
+        # PHASE 2: Generate deterministic trade UID
+        trade_uid = generate_trade_uid(
+            symbol=symbol,
+            entry_date=entry_date,
+            entry_price=entry_price,
+            entry_signal=entry_signal,
+            backtest_id=str(backtest_id),
+        )
+        
         trade = Trade(
             backtest_id=backtest_id,
+            trade_uid=trade_uid,  # PHASE 2: Deterministic UID
             symbol=symbol,
             entry_date=entry_date,
             entry_price=entry_price,
@@ -225,12 +240,12 @@ class DatabaseManager:
             trade.duration_minutes = int(
                 (exit_date - entry_date).total_seconds() / 60
             )
-        
+
         with self.get_session() as session:
             session.add(trade)
             session.flush()
             trade_id = trade.id
-        
+
         return trade_id
     
     def get_trade(self, trade_id: int) -> Optional[Trade]:
@@ -290,11 +305,22 @@ class DatabaseManager:
                     recorded_at = datetime.utcnow()
             else:
                 recorded_at = datetime.utcnow()
-            
+
+            # PHASE 2: Generate deterministic trade UID for live signals
+            # Use None as backtest_id scope for live trades (scoped as "LIVE")
+            trade_uid = generate_trade_uid(
+                symbol=trade_data.get('sym', 'UNKNOWN'),
+                entry_date=recorded_at,
+                entry_price=float(trade_data.get('entry', 0.0)),
+                entry_signal=trade_data.get('action', 'buy').lower(),
+                backtest_id=None,  # Live signals use None
+            )
+
             # Create trade with minimal required fields
             # backtest_id is None for live signals (not from a backtest)
             trade = Trade(
                 backtest_id=None,  # Live signal, not from backtest
+                trade_uid=trade_uid,  # PHASE 2: Deterministic UID
                 symbol=trade_data.get('sym', 'UNKNOWN'),
                 entry_date=recorded_at,
                 entry_price=float(trade_data.get('entry', 0.0)),

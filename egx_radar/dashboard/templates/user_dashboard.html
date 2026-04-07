@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>EGX Radar Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f5f7fb; margin: 0; color: #102542; }
+        .topbar { display: flex; justify-content: space-between; align-items: center; padding: 20px 32px; background: #102542; color: #fff; }
+        .topbar a { color: #fff; text-decoration: none; }
+        .content { padding: 24px 32px; }
+        .card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.06); margin-bottom: 24px; }
+        .message { padding: 10px 12px; border-radius: 8px; margin-bottom: 12px; }
+        .message.error { background: #fde8e8; color: #8a1c1c; }
+        .message.success { background: #e8f7ec; color: #19663a; }
+        .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+        .btn { display: inline-block; padding: 10px 14px; border-radius: 8px; text-decoration: none; border: 0; cursor: pointer; background: #102542; color: #fff; }
+        .btn.secondary { background: #0b63ce; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px 10px; border-bottom: 1px solid #e6ebf2; text-align: left; }
+        th { background: #f0f4f9; }
+        .empty { color: #5e6b7a; }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <div>
+            <strong>EGX Radar</strong><br>
+            <small>Logged in as {{ current_user.email }}</small>
+        </div>
+        <div>
+            <a href="{{ url_for('dashboard.logout') }}">Logout</a>
+        </div>
+    </div>
+
+    <div class="content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="message {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="card">
+            <h1>Latest Scan Results</h1>
+            {% if latest_run %}
+                <p>Most recent scan: {{ latest_run.timestamp }}</p>
+            {% else %}
+                <p class="empty">No scan runs have been saved to the database yet.</p>
+            {% endif %}
+
+            <h2>Telegram Alerts</h2>
+            {% if current_user.telegram_chat_id %}
+                <p>Connected chat ID: {{ current_user.telegram_chat_id }}</p>
+            {% else %}
+                <p class="empty">Telegram is not connected yet.</p>
+            {% endif %}
+
+            <div class="actions">
+                <a class="btn" href="{{ url_for('dashboard.telegram_connect') }}">Connect Telegram</a>
+                {% if telegram_ready and current_user.telegram_chat_id %}
+                    <form method="post" action="{{ url_for('dashboard.telegram_test') }}">
+                        <button class="btn secondary" type="submit">Send Test Message</button>
+                    </form>
+                    <form method="post" action="{{ url_for('dashboard.telegram_dispatch') }}">
+                        <button class="btn secondary" type="submit">Send Latest Alerts</button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card">
+            {% if signals %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Symbol</th>
+                            <th>SmartRank</th>
+                            <th>Trade Type</th>
+                            <th>Entry</th>
+                            <th>Stop</th>
+                            <th>Target</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for signal in signals %}
+                            <tr>
+                                <td>{{ signal.symbol }}</td>
+                                <td>{{ "%.2f"|format(signal.smart_rank or 0) }}</td>
+                                <td>{{ signal.trade_type or "-" }}</td>
+                                <td>{{ signal.entry or "-" }}</td>
+                                <td>{{ signal.stop or "-" }}</td>
+                                <td>{{ signal.target or "-" }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p class="empty">No ScanSignal rows found yet. Once the scanner starts saving scan runs, they will appear here.</p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

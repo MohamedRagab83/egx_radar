@@ -1,11 +1,4 @@
 {
-  "status": "done",
-  "csv": "EGX_Radar_Backtest_2026-03-15_18-14.csv",
-  "sr": 30.0,
-  "total_trades": 233,
-  "win_rate_pct": 33.9,
-  "profit_factor": 1.76,
-  "max_drawdown_pct": 10.63,
-  "sharpe_ratio": 1.35,
-  "total_return_pct": 113.13
+  "status": "error",
+  "error": "Traceback (most recent call last):\n  File \"D:\\egx radar seprated\\_run_single_bt.py\", line 21, in <module>\n    trades, equity_curve, params = run_backtest(\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nValueError: too many values to unpack (expected 3)\n"
 }

@@ -1,8 +1,11 @@
 """WebSocket support for real-time dashboard updates."""
 
+import time
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from datetime import datetime
 from typing import Dict, Any, Optional
+
+from egx_radar.dashboard.routes import _load_scan_snapshot
 
 socketio = SocketIO(cors_allowed_origins="*")
 
@@ -274,42 +277,46 @@ def emit_signal_generated(signal_data: Dict[str, Any]):
     }, room='signals_all')
 
 
-def emit_scan_complete(results: list) -> None:
+def emit_scan_complete(results: list) -> None:  # Phase 9 — GAP-3 fix
     """
     Emit scan_complete event to all connected dashboard clients.
     Called by scan/runner.py after every scan completes.
-    
+
     Args:
         results: List of result dicts from run_scan() — same format as
                  scan_snapshot.json. Each result contains signal analysis
                  with SmartRank scores.
     """
-    try:
-        payload = {
-            "event":     "scan_complete",
-            "count":     len(results),
-            "timestamp": datetime.utcnow().isoformat(),
-            "signals": [{
-                "sym":        r.get("sym"),
-                "sector":     r.get("sector"),
-                "signal":     r.get("signal"),
-                "tag":        r.get("tag"),
-                "smart_rank": r.get("smart_rank", 0.0),
-                "direction":  r.get("signal_dir", r.get("direction", "")),
-                "action":     r.get("plan", {}).get("action", "WAIT")
-                               if isinstance(r.get("plan"), dict) else "WAIT",
-                "entry":      r.get("plan", {}).get("entry", 0.0)
-                               if isinstance(r.get("plan"), dict) else 0.0,
-                "stop":       r.get("plan", {}).get("stop", 0.0)
-                               if isinstance(r.get("plan"), dict) else 0.0,
-                "target":     r.get("plan", {}).get("target", 0.0)
-                               if isinstance(r.get("plan"), dict) else 0.0,
-            } for r in results[:50]],  # cap at 50 to keep payload small
+    try:  # Phase 9 — GAP-3 fix
+        scan_time = datetime.utcnow().isoformat()  # Phase 9 — GAP-3 fix
+        payload = {  # Phase 9 — GAP-3 fix
+            "event":        "scan_complete",  # Phase 9 — GAP-3 fix
+            "scan_time":    scan_time,  # Phase 9 — GAP-3 fix
+            "signal_count": len(results),  # Phase 9 — GAP-3 fix
+            "source":       "core_scanner_smartrank",  # Phase 9 — GAP-3 fix
+            "top_signals": [  # Phase 9 — GAP-3 fix — first 5, slim format
+                {
+                    "sym":        r.get("sym"),
+                    "sector":     r.get("sector"),
+                    "tag":        r.get("tag"),
+                    "smart_rank": r.get("smart_rank", 0.0),
+                    "direction":  r.get("signal_dir", r.get("direction", "")),
+                    "action":     r.get("plan", {}).get("action", "WAIT")
+                                  if isinstance(r.get("plan"), dict) else "WAIT",
+                    "entry":      r.get("plan", {}).get("entry", 0.0)
+                                  if isinstance(r.get("plan"), dict) else 0.0,
+                    "stop":       r.get("plan", {}).get("stop", 0.0)
+                                  if isinstance(r.get("plan"), dict) else 0.0,
+                    "target":     r.get("plan", {}).get("target", 0.0)
+                                  if isinstance(r.get("plan"), dict) else 0.0,
+                }
+                for r in results[:5]  # Phase 9 — GAP-3 fix — top 5 only
+            ],
         }
-        socketio.emit("scan_complete", payload, namespace="/", broadcast=True)
-    except Exception as exc:
+        socketio.emit("scan_complete", payload, namespace="/", broadcast=True)  # Phase 9 — GAP-3 fix
+    except Exception as exc:  # Phase 9 — GAP-3 fix
         import logging
-        logging.getLogger(__name__).debug("emit_scan_complete failed: %s", exc)
+        logging.getLogger(__name__).debug("emit_scan_complete failed: %s", exc)  # Phase 9 — GAP-3 fix
 
 
 def emit_alert(alert_data: Dict[str, Any]):
@@ -328,7 +335,7 @@ def emit_alert(alert_data: Dict[str, Any]):
 def emit_market_update(symbol: str, update_data: Dict[str, Any]):
     """
     Emit comprehensive market update for a symbol.
-    
+
     Args:
         symbol: Stock symbol
         update_data: Market data (price, volatility, sentiment, etc.)
@@ -339,3 +346,23 @@ def emit_market_update(symbol: str, update_data: Dict[str, Any]):
         'data': update_data,
         'timestamp': datetime.utcnow().isoformat()
     }, room=room)
+
+
+def start_scan_broadcast(interval_seconds=30):
+    """Broadcast latest scan results every N seconds."""
+    import threading
+    def _broadcast():
+        while True:
+            try:
+                snapshot = _load_scan_snapshot()
+                if snapshot:
+                    socketio.emit('scan_update', {
+                        'source': 'core_scanner_smartrank',
+                        'count': len(snapshot),
+                        'signals': snapshot,
+                    })
+            except Exception:
+                pass
+            time.sleep(interval_seconds)
+    t = threading.Thread(target=_broadcast, daemon=True)
+    t.start()

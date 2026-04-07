@@ -4,6 +4,7 @@ import logging
 from typing import Dict, List, NamedTuple, Tuple
 
 from egx_radar.config.settings import (
+    K,
     SECTORS,
     get_account_size,
     get_max_per_sector,
@@ -38,10 +39,14 @@ def compute_portfolio_guard(
         account_size = get_account_size()
     max_per_sector = get_max_per_sector()
     atr_exposure   = get_atr_exposure()
+    max_open_trades = int(getattr(K, "PORTFOLIO_MAX_OPEN_TRADES", 3))
+    max_sector_exposure_value = account_size * float(getattr(K, "PORTFOLIO_MAX_SECTOR_EXPOSURE_PCT", 0.30))
 
     active_tags    = {"buy", "ultra", "early"}
     sector_counts: Dict[str, int] = {s: 0 for s in SECTORS}
+    sector_notional: Dict[str, float] = {s: 0.0 for s in SECTORS}
     cumulative     = 0.0
+    active_positions = 0
     
     # Feature 5: Advanced Portfolio Guard
     # Pre-fill exposure with currently active trades
@@ -50,6 +55,9 @@ def compute_portfolio_guard(
             sec = t.get("sector")
             if sec in sector_counts:
                 sector_counts[sec] += 1
+                sector_notional[sec] += float(t.get("entry", 0.0)) * float(t.get("size", 0))
+            if t.get("status", "OPEN") == "OPEN":
+                active_positions += 1
             # Assuming size and atr are present or can be calculated (using standard risk)
             # If not present, we will estimate based on standard 4% risk
             t_atr = t.get("atr", 0.0)
@@ -99,13 +107,32 @@ def compute_portfolio_guard(
 
         sector  = r["sector"]
         atr     = r.get("atr") or 0.0
-        size    = (r.get("plan") or {}).get("size", 0)
+        plan    = r.get("plan") or {}
+        size    = plan.get("size", 0)
+        entry   = float(plan.get("entry", r.get("price", 0.0)) or 0.0)
         contrib = atr * size
+        notional = entry * size
+
+        if active_positions >= max_open_trades:
+            reason = f"Open-trade cap reached ({active_positions}/{max_open_trades})"
+            blocked_syms.append(r["sym"])
+            guarded.append(GuardedResult(r, reason, True))
+            continue
 
         if sector_counts.get(sector, 0) >= max_per_sector:
             reason = (
                 f"Sector cap: {sector} already has "
                 f"{sector_counts[sector]} signal(s) (max {max_per_sector})"
+            )
+            blocked_syms.append(r["sym"])
+            guarded.append(GuardedResult(r, reason, True))
+            continue
+
+        if sector_notional.get(sector, 0.0) + notional > max_sector_exposure_value:
+            reason = (
+                f"Sector exposure cap: {sector} would reach "
+                f"{(sector_notional.get(sector, 0.0) + notional):.0f} EGP "
+                f"(max {max_sector_exposure_value:.0f} EGP)"
             )
             blocked_syms.append(r["sym"])
             guarded.append(GuardedResult(r, reason, True))
@@ -123,8 +150,9 @@ def compute_portfolio_guard(
             continue
 
         sector_counts[sector] = sector_counts.get(sector, 0) + 1
+        sector_notional[sector] = sector_notional.get(sector, 0.0) + notional
         cumulative += contrib
+        active_positions += 1
         guarded.append(GuardedResult(r, "", False))
 
     return guarded, sector_counts, cumulative, blocked_syms, daily_loss_triggered
-

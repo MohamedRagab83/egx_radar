@@ -1,0 +1,553 @@
+from __future__ import annotations
+
+import argparse
+import importlib.machinery
+import importlib.util
+import json
+import math
+import sys
+from contextlib import contextmanager
+from pathlib import Path
+from typing import Any, Dict, Iterable, List, Optional, Tuple
+
+import pandas as pd
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from egx_radar.backtest.engine import detect_market_regime
+from egx_radar.config.settings import K, SYMBOLS, get_sector
+from egx_radar.core import signal_engine
+from egx_radar.core.signal_engine import apply_regime_gate, detect_conservative_market_regime
+from egx_radar.data.data_engine import get_data_engine
+
+
+ACCUMULATION_NUMERIC_KEYS = [
+    "accumulation_quality_score",
+    "structure_strength_score",
+    "volume_quality_score",
+    "trend_alignment_score",
+    "compression_range_pct",
+    "compression_score",
+    "compression_window",
+    "contraction_ratio",
+    "position_in_range",
+    "support_slope_pct",
+    "gradual_volume_ratio",
+    "up_down_volume_ratio",
+    "volume_variation_ratio",
+    "turnover_multiple",
+    "minor_resistance",
+    "trigger_price",
+    "minor_break_pct",
+    "base_low",
+    "base_wick_low",
+    "base_high",
+    "one_day_gain_pct",
+    "two_day_gain_pct",
+    "last_3_days_gain_pct",
+    "gap_up_pct",
+    "range_today_pct",
+    "body_today_pct",
+    "avg_vol_5",
+    "avg_vol_10",
+    "avg_vol_20",
+    "base_risk_pct",
+]
+
+SMART_RANK_INPUT_KEYS = [
+    "accumulation_quality_score",
+    "structure_strength_score",
+    "volume_quality_score",
+    "trend_alignment_score",
+]
+
+COMPARE_METRICS = [
+    "accumulation_quality_score",
+    "compression_score",
+    "volume_quality_score",
+    "smart_rank",
+]
+
+
+def _is_finite_number(value: object) -> bool:
+    try:
+        return math.isfinite(float(value))
+    except (TypeError, ValueError):
+        return False
+
+
+def _to_float(value: object) -> Optional[float]:
+    if not _is_finite_number(value):
+        return None
+    return float(value)
+
+
+def _mean(values: Iterable[float]) -> Optional[float]:
+    seq = [float(v) for v in values if _is_finite_number(v)]
+    if not seq:
+        return None
+    return sum(seq) / len(seq)
+
+
+def _median(values: Iterable[float]) -> Optional[float]:
+    seq = sorted(float(v) for v in values if _is_finite_number(v))
+    if not seq:
+        return None
+    mid = len(seq) // 2
+    if len(seq) % 2:
+        return seq[mid]
+    return (seq[mid - 1] + seq[mid]) / 2.0
+
+
+def _round_or_none(value: Optional[float], digits: int = 4) -> Optional[float]:
+    if value is None or not _is_finite_number(value):
+        return None
+    return round(float(value), digits)
+
+
+def _action_of(snapshot: Optional[dict]) -> str:
+    if not isinstance(snapshot, dict):
+        return "MISSING"
+    plan = snapshot.get("plan")
+    if isinstance(plan, dict):
+        return str(plan.get("action", "WAIT"))
+    return "WAIT"
+
+
+def _materiality_score(before: Optional[dict], after: Optional[dict]) -> float:
+    score = 0.0
+    if _action_of(before) != _action_of(after):
+        score += 100.0
+    for field, weight in (
+        ("smart_rank", 1.0),
+        ("accumulation_quality_score", 0.7),
+        ("compression_score", 0.5),
+        ("volume_quality_score", 0.5),
+    ):
+        before_value = _to_float((before or {}).get(field))
+        after_value = _to_float((after or {}).get(field))
+        if before_value is None or after_value is None:
+            continue
+        score += abs(after_value - before_value) * weight
+    return score
+
+
+def _build_loader(path: Path):
+    loader = importlib.machinery.SourceFileLoader(path.stem, str(path))
+    spec = importlib.util.spec_from_loader(path.stem, loader)
+    if spec is None:
+        raise RuntimeError(f"Unable to load module spec from {path}")
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
+
+
+def _load_backup_accumulation(path: Path):
+    module = _build_loader(path)
+    func = getattr(module, "evaluate_accumulation_context", None)
+    if func is None:
+        raise RuntimeError(f"evaluate_accumulation_context not found in {path}")
+    return func
+
+
+@contextmanager
+def _patched_accumulation(eval_func):
+    original = signal_engine.evaluate_accumulation_context
+    signal_engine.evaluate_accumulation_context = eval_func
+    try:
+        yield
+    finally:
+        signal_engine.evaluate_accumulation_context = original
+
+
+def _yahoo_to_sym() -> Dict[str, str]:
+    return {ticker: sym for sym, ticker in SYMBOLS.items()}
+
+
+def _subset_data(
+    all_data: Dict[str, pd.DataFrame],
+    *,
+    max_symbols: Optional[int] = None,
+    only_symbols: Optional[List[str]] = None,
+) -> Dict[str, pd.DataFrame]:
+    if only_symbols:
+        tickers = {SYMBOLS[sym] for sym in only_symbols if sym in SYMBOLS}
+        if K.EGX30_SYMBOL in all_data:
+            tickers.add(K.EGX30_SYMBOL)
+        return {ticker: df for ticker, df in all_data.items() if ticker in tickers}
+
+    if max_symbols is None or max_symbols <= 0 or len(all_data) <= max_symbols:
+        return all_data
+
+    selected = sorted(all_data.keys())[:max_symbols]
+    if K.EGX30_SYMBOL in all_data and K.EGX30_SYMBOL not in selected:
+        selected[-1] = K.EGX30_SYMBOL
+    return {ticker: all_data[ticker] for ticker in sorted(set(selected)) if ticker in all_data}
+
+
+def _evaluation_dates(all_data: Dict[str, pd.DataFrame], recent_days: int) -> List[pd.Timestamp]:
+    all_dates = sorted({date for df in all_data.values() for date in df.index})
+    if recent_days > 0:
+        return all_dates[-recent_days:]
+    return all_dates
+
+
+def _run_mode(
+    all_data: Dict[str, pd.DataFrame],
+    dates: List[pd.Timestamp],
+    eval_func,
+) -> Tuple[Dict[str, dict], Dict[str, dict], Dict[str, dict], List[dict]]:
+    yahoo_to_sym = _yahoo_to_sym()
+    snapshots: Dict[str, dict] = {}
+    contexts: Dict[str, dict] = {}
+    day_meta: Dict[str, dict] = {}
+    errors: List[dict] = []
+    current_key: Optional[str] = None
+
+    def instrumented_eval(*args, **kwargs):
+        ctx = eval_func(*args, **kwargs)
+        if current_key is not None and isinstance(ctx, dict):
+            contexts[current_key] = dict(ctx)
+        return ctx
+
+    with _patched_accumulation(instrumented_eval):
+        for date in dates:
+            results: List[dict] = []
+            market_regime = "WEAK"
+            pre_regime = "BULL"
+
+            proxy_df = all_data.get(K.EGX30_SYMBOL)
+            if proxy_df is not None and date in proxy_df.index:
+                proxy_slice = proxy_df[proxy_df.index <= date].tail(260).copy()
+                market_regime = detect_market_regime(proxy_slice)
+                pre_regime = "BULL" if market_regime == "STRONG" else "NEUTRAL"
+
+            for yahoo, df in all_data.items():
+                sym = yahoo_to_sym.get(yahoo)
+                if not sym or date not in df.index:
+                    continue
+                df_slice = df[df.index <= date].tail(260).copy()
+                if df_slice.empty:
+                    continue
+                try:
+                    current_key = f"{date.strftime('%Y-%m-%d')}|{sym}"
+                    result = signal_engine.evaluate_symbol_snapshot(
+                        df_ta=df_slice,
+                        sym=sym,
+                        sector=get_sector(sym),
+                        regime=pre_regime,
+                    )
+                except Exception as exc:
+                    errors.append(
+                        {
+                            "date": date.strftime("%Y-%m-%d"),
+                            "sym": sym,
+                            "error": str(exc),
+                        }
+                    )
+                    continue
+                finally:
+                    current_key = None
+                if result is not None:
+                    results.append(result)
+
+            final_regime = detect_conservative_market_regime(results) if results else "NEUTRAL"
+            if results and final_regime != "BULL":
+                results = [apply_regime_gate(item, final_regime) for item in results]
+
+            day_meta[date.strftime("%Y-%m-%d")] = {
+                "pre_regime": pre_regime,
+                "market_regime": market_regime,
+                "final_regime": final_regime,
+                "result_count": len(results),
+            }
+            for result in results:
+                key = f"{date.strftime('%Y-%m-%d')}|{result['sym']}"
+                snapshots[key] = result
+
+    return snapshots, contexts, day_meta, errors
+
+
+def _non_finite_details(snapshots: Dict[str, dict], keys: Iterable[str]) -> List[dict]:
+    details: List[dict] = []
+    for key, snapshot in snapshots.items():
+        bad_fields = [field for field in keys if field in snapshot and not _is_finite_number(snapshot.get(field))]
+        if bad_fields:
+            details.append(
+                {
+                    "key": key,
+                    "fields": bad_fields,
+                    "action": _action_of(snapshot),
+                }
+            )
+    return details
+
+
+def _metric_shift(before: Dict[str, dict], after: Dict[str, dict], field: str) -> dict:
+    keys = sorted(set(before.keys()) & set(after.keys()))
+    before_values: List[float] = []
+    after_values: List[float] = []
+    deltas: List[float] = []
+
+    for key in keys:
+        before_value = _to_float(before[key].get(field))
+        after_value = _to_float(after[key].get(field))
+        if before_value is None or after_value is None:
+            continue
+        before_values.append(before_value)
+        after_values.append(after_value)
+        deltas.append(after_value - before_value)
+
+    abs_deltas = [abs(delta) for delta in deltas]
+    return {
+        "count": len(deltas),
+        "before_mean": _round_or_none(_mean(before_values)),
+        "after_mean": _round_or_none(_mean(after_values)),
+        "before_median": _round_or_none(_median(before_values)),
+        "after_median": _round_or_none(_median(after_values)),
+        "mean_delta": _round_or_none(_mean(deltas)),
+        "median_delta": _round_or_none(_median(deltas)),
+        "max_abs_delta": _round_or_none(max(abs_deltas) if abs_deltas else None),
+        "changed_ge_1": sum(1 for value in abs_deltas if value >= 1.0),
+        "changed_ge_3": sum(1 for value in abs_deltas if value >= 3.0),
+        "changed_ge_5": sum(1 for value in abs_deltas if value >= 5.0),
+    }
+
+
+def _decision_changes(before: Dict[str, dict], after: Dict[str, dict]) -> List[dict]:
+    changes: List[dict] = []
+    for key in sorted(set(before.keys()) | set(after.keys())):
+        before_snapshot = before.get(key)
+        after_snapshot = after.get(key)
+        before_action = _action_of(before_snapshot)
+        after_action = _action_of(after_snapshot)
+        if before_action == after_action:
+            continue
+        changes.append(
+            {
+                "key": key,
+                "date": key.split("|", 1)[0],
+                "sym": key.split("|", 1)[1],
+                "before_action": before_action,
+                "after_action": after_action,
+                "before_smart_rank": _round_or_none(_to_float((before_snapshot or {}).get("smart_rank")), 2),
+                "after_smart_rank": _round_or_none(_to_float((after_snapshot or {}).get("smart_rank")), 2),
+                "before_accum": _round_or_none(_to_float((before_snapshot or {}).get("accumulation_quality_score")), 2),
+                "after_accum": _round_or_none(_to_float((after_snapshot or {}).get("accumulation_quality_score")), 2),
+            }
+        )
+    return changes
+
+
+def _material_changes(
+    before: Dict[str, dict],
+    after: Dict[str, dict],
+    before_contexts: Dict[str, dict],
+    after_contexts: Dict[str, dict],
+    limit: int = 15,
+) -> List[dict]:
+    rows: List[dict] = []
+    for key in sorted(set(before.keys()) | set(after.keys())):
+        before_snapshot = before.get(key)
+        after_snapshot = after.get(key)
+        if before_snapshot is None and after_snapshot is None:
+            continue
+        action_changed = _action_of(before_snapshot) != _action_of(after_snapshot)
+        smart_rank_before = _to_float((before_snapshot or {}).get("smart_rank"))
+        smart_rank_after = _to_float((after_snapshot or {}).get("smart_rank"))
+        accum_before = _to_float((before_snapshot or {}).get("accumulation_quality_score"))
+        accum_after = _to_float((after_snapshot or {}).get("accumulation_quality_score"))
+        before_context = before_contexts.get(key) or {}
+        after_context = after_contexts.get(key) or {}
+        compression_before = _to_float(before_context.get("compression_score"))
+        compression_after = _to_float(after_context.get("compression_score"))
+        volume_before = _to_float(before_context.get("volume_quality_score"))
+        volume_after = _to_float(after_context.get("volume_quality_score"))
+
+        smart_rank_delta = None if smart_rank_before is None or smart_rank_after is None else smart_rank_after - smart_rank_before
+        accum_delta = None if accum_before is None or accum_after is None else accum_after - accum_before
+        compression_delta = None if compression_before is None or compression_after is None else compression_after - compression_before
+        volume_delta = None if volume_before is None or volume_after is None else volume_after - volume_before
+
+        materially_changed = action_changed or any(
+            value is not None and abs(value) >= threshold
+            for value, threshold in (
+                (smart_rank_delta, 3.0),
+                (accum_delta, 5.0),
+                (compression_delta, 5.0),
+                (volume_delta, 5.0),
+            )
+        )
+        if not materially_changed:
+            continue
+
+        rows.append(
+            {
+                "date": key.split("|", 1)[0],
+                "sym": key.split("|", 1)[1],
+                "before_action": _action_of(before_snapshot),
+                "after_action": _action_of(after_snapshot),
+                "smart_rank_delta": _round_or_none(smart_rank_delta, 2),
+                "accum_delta": _round_or_none(accum_delta, 2),
+                "compression_delta": _round_or_none(compression_delta, 2),
+                "volume_delta": _round_or_none(volume_delta, 2),
+                "materiality_score": _round_or_none(_materiality_score(before_snapshot, after_snapshot), 2),
+            }
+        )
+
+    rows.sort(key=lambda item: float(item.get("materiality_score") or 0.0), reverse=True)
+    return rows[:limit]
+
+
+def _print_report(report: dict) -> None:
+    print("=== Accumulation Patch Before/After Comparison ===")
+    print(f"Date range        : {report['params']['date_from']} -> {report['params']['date_to']}")
+    print(f"Evaluation dates  : {report['params']['evaluated_days']}")
+    print(f"Symbols tested    : {report['params']['symbol_count']}")
+    print(f"Backup source     : {report['params']['backup_path']}")
+    print()
+    print("Integrity")
+    print(f"  Non-finite accumulation outputs  : before={report['integrity']['before_nonfinite_accum']} after={report['integrity']['after_nonfinite_accum']}")
+    print(f"  Non-finite SmartRank inputs      : before={report['integrity']['before_nonfinite_rank_inputs']} after={report['integrity']['after_nonfinite_rank_inputs']}")
+    print(f"  Accumulation candidates          : before={report['counts']['before_accum_candidates']} after={report['counts']['after_accum_candidates']}")
+    print(f"  Final decision changes           : {report['counts']['final_decision_changes']}")
+    print()
+    print("Distribution Shifts")
+    for field, summary in report["distribution_shift"].items():
+        print(
+            "  {field:<28} count={count:<4} mean_delta={mean_delta} median_delta={median_delta} max_abs_delta={max_abs_delta}".format(
+                field=field,
+                count=summary["count"],
+                mean_delta=summary["mean_delta"],
+                median_delta=summary["median_delta"],
+                max_abs_delta=summary["max_abs_delta"],
+            )
+        )
+    print()
+    print("Material Changes")
+    if not report["material_changes"]:
+        print("  None")
+    else:
+        for row in report["material_changes"]:
+            print(
+                "  {date} {sym:<8} {before_action:>10} -> {after_action:<10} rank_d={smart_rank_delta} accum_d={accum_delta} comp_d={compression_delta} vol_d={volume_delta}".format(
+                    **row
+                )
+            )
+    if report["before_errors"] or report["after_errors"]:
+        print()
+        print("Errors")
+        print(f"  Before errors: {len(report['before_errors'])}")
+        print(f"  After errors : {len(report['after_errors'])}")
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Compare accumulation.py backup vs patched behavior on the same historical data.")
+    parser.add_argument("--date-from", default="2025-01-01", help="Backtest fetch start date (YYYY-MM-DD).")
+    parser.add_argument("--date-to", default="2026-03-31", help="Backtest fetch end date (YYYY-MM-DD).")
+    parser.add_argument("--recent-days", type=int, default=20, help="Number of most recent trading days to evaluate.")
+    parser.add_argument("--max-symbols", type=int, default=0, help="Optional limit for quick smoke tests.")
+    parser.add_argument("--symbols", default="", help="Optional comma-separated EGX symbols to restrict the run.")
+    parser.add_argument("--output", default="", help="Optional JSON file path for the comparison report.")
+    args = parser.parse_args()
+
+    backup_path = PROJECT_ROOT / "egx_radar" / "core" / "accumulation.py.bak"
+    if not backup_path.exists():
+        print(f"Backup file not found: {backup_path}")
+        return 2
+
+    symbols = [item.strip().upper() for item in args.symbols.split(",") if item.strip()]
+    all_data = get_data_engine().fetch_backtest(args.date_from, args.date_to)
+    if not all_data:
+        print("No backtest data loaded; comparison aborted.")
+        return 3
+
+    all_data = _subset_data(
+        all_data,
+        max_symbols=args.max_symbols if args.max_symbols > 0 else None,
+        only_symbols=symbols or None,
+    )
+    if not all_data:
+        print("No symbols available after applying filters.")
+        return 4
+
+    dates = _evaluation_dates(all_data, args.recent_days)
+    if not dates:
+        print("No evaluation dates available.")
+        return 5
+
+    before_eval = _load_backup_accumulation(backup_path)
+    after_eval = signal_engine.evaluate_accumulation_context
+
+    before_snapshots, before_contexts, before_day_meta, before_errors = _run_mode(all_data, dates, before_eval)
+    after_snapshots, after_contexts, after_day_meta, after_errors = _run_mode(all_data, dates, after_eval)
+
+    before_nonfinite_accum = _non_finite_details(before_contexts, ACCUMULATION_NUMERIC_KEYS)
+    after_nonfinite_accum = _non_finite_details(after_contexts, ACCUMULATION_NUMERIC_KEYS)
+    before_nonfinite_rank_inputs = _non_finite_details(before_contexts, SMART_RANK_INPUT_KEYS)
+    after_nonfinite_rank_inputs = _non_finite_details(after_contexts, SMART_RANK_INPUT_KEYS)
+    final_decision_changes = _decision_changes(before_snapshots, after_snapshots)
+
+    report = {
+        "params": {
+            "date_from": args.date_from,
+            "date_to": args.date_to,
+            "evaluated_days": len(dates),
+            "symbol_count": len(all_data),
+            "backup_path": str(backup_path),
+            "symbols": symbols,
+            "max_symbols": args.max_symbols,
+        },
+        "counts": {
+            "before_results": len(before_snapshots),
+            "after_results": len(after_snapshots),
+            "before_accum_candidates": sum(1 for snapshot in before_snapshots.values() if snapshot.get("accumulation_detected")),
+            "after_accum_candidates": sum(1 for snapshot in after_snapshots.values() if snapshot.get("accumulation_detected")),
+            "final_decision_changes": len(final_decision_changes),
+        },
+        "integrity": {
+            "before_nonfinite_accum": len(before_nonfinite_accum),
+            "after_nonfinite_accum": len(after_nonfinite_accum),
+            "before_nonfinite_rank_inputs": len(before_nonfinite_rank_inputs),
+            "after_nonfinite_rank_inputs": len(after_nonfinite_rank_inputs),
+        },
+        "distribution_shift": {
+            "accumulation_quality_score": _metric_shift(before_contexts, after_contexts, "accumulation_quality_score"),
+            "compression_score": _metric_shift(before_contexts, after_contexts, "compression_score"),
+            "volume_quality_score": _metric_shift(before_contexts, after_contexts, "volume_quality_score"),
+            "smart_rank": _metric_shift(before_snapshots, after_snapshots, "smart_rank"),
+        },
+        "material_changes": _material_changes(before_snapshots, after_snapshots, before_contexts, after_contexts),
+        "decision_changes": final_decision_changes[:50],
+        "before_nonfinite_examples": before_nonfinite_accum[:25],
+        "after_nonfinite_examples": after_nonfinite_accum[:25],
+        "before_rank_input_examples": before_nonfinite_rank_inputs[:25],
+        "after_rank_input_examples": after_nonfinite_rank_inputs[:25],
+        "before_context_count": len(before_contexts),
+        "after_context_count": len(after_contexts),
+        "before_day_meta": before_day_meta,
+        "after_day_meta": after_day_meta,
+        "before_errors": before_errors[:50],
+        "after_errors": after_errors[:50],
+    }
+
+    _print_report(report)
+
+    if args.output:
+        output_path = Path(args.output)
+        if not output_path.is_absolute():
+            output_path = PROJECT_ROOT / output_path
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with output_path.open("w", encoding="utf-8") as handle:
+            json.dump(report, handle, indent=2)
+        print()
+        print(f"Saved report: {output_path}")
+
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

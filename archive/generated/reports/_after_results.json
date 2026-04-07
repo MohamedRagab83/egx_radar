@@ -1,0 +1,11 @@
+{
+  "trades": 3,
+  "win_rate_label": 33.3,
+  "win_rate_pnl": 66.7,
+  "max_drawdown": 0.28,
+  "total_return": 0.29,
+  "profit_factor": 1.08,
+  "avg_win": 3.45,
+  "avg_loss": -3.44,
+  "avg_pnl": 0.1
+}

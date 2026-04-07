@@ -1,0 +1,26 @@
+{
+  "baseline": {
+    "trades": 177,
+    "return_pct": -10.32,
+    "winrate_pct": 34.46,
+    "drawdown_pct": 13.13,
+    "sharpe": -0.93,
+    "expectancy_pct": -0.4
+  },
+  "ai": {
+    "trades": 177,
+    "return_pct": -10.32,
+    "winrate_pct": 34.46,
+    "drawdown_pct": 13.13,
+    "sharpe": -0.93,
+    "expectancy_pct": -0.4
+  },
+  "alpha": {
+    "trades": 177,
+    "return_pct": -10.32,
+    "winrate_pct": 34.46,
+    "drawdown_pct": 13.13,
+    "sharpe": -0.93,
+    "expectancy_pct": -0.4
+  }
+}

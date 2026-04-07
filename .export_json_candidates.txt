@@ -1,0 +1,8 @@
+﻿D:\egx radar seprated\.vscode\settings.json
+D:\egx radar seprated\brain_state.json
+D:\egx radar seprated\egx_radar\.vscode\settings.json
+D:\egx radar seprated\egx_radar\brain_state.json
+D:\egx radar seprated\egx_radar\brain_state.tmp.json
+D:\egx radar seprated\egx_radar\source_settings.json
+D:\egx radar seprated\scan_snapshot.json
+D:\egx radar seprated\source_settings.json

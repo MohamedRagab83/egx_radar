@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     git \
     gcc \
+    python3-tk \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
@@ -33,9 +34,9 @@ USER appuser
 # Create directories for logs and data
 RUN mkdir -p /app/logs /app/data
 
-# Health check
+# Lightweight health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "from egx_radar.backtest.engine import run_backtest; print('OK')" || exit 1
+    CMD python -c "import egx_radar; print('OK')" || exit 1
 
 # Install package
 RUN pip install -e . --user
@@ -45,5 +46,5 @@ ENV PYTHONUNBUFFERED=1
 ENV WORKERS_COUNT=4
 ENV MAX_BACKTEST_SECONDS=60
 
-# Default command
-CMD ["python", "-m", "egx_radar"]
+# Default command (web service)
+CMD ["sh", "-c", "gunicorn --workers ${GUNICORN_WORKERS:-2} --bind 0.0.0.0:${PORT:-5000} egx_radar.deployment.wsgi:app"]

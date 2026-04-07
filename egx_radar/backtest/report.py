@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 """Backtest report UI: tab with controls, summary, equity curve, trades table, CSV export."""
 
@@ -14,6 +14,7 @@ from tkinter import filedialog, messagebox, ttk
 from egx_radar.config.settings import C, F_HEADER, F_SMALL, F_MICRO, K
 from egx_radar.state.app_state import STATE
 
+from egx_radar.backtest.dashboard import build_performance_dashboard
 from egx_radar.backtest.engine import run_backtest
 from egx_radar.backtest.metrics import compute_metrics
 
@@ -64,15 +65,14 @@ def open_backtest_window(root: tk.Tk) -> None:
                     date_from=date_from,
                     date_to=date_to,
                     max_bars=max_bars,
-                    max_concurrent_trades=5,
+                    max_concurrent_trades=K.PORTFOLIO_MAX_OPEN_TRADES,
                     progress_callback=progress,
                 )
-                # run_backtest returns 4 values: (trades, equity_curve, params, guard_stats)
-                # The original code unpacked only 3, causing ValueError on every single run.
                 if len(result) == 4:
-                    trades, equity_curve, params, _guard_stats = result
+                    trades, equity_curve, params, diagnostics = result
                 else:
                     trades, equity_curve, params = result
+                    diagnostics = {}
             except Exception as exc:
                 log.exception("Backtest failed: %s", exc)
                 _enqueue(lambda: messagebox.showerror("Backtest Error", str(exc)))
@@ -80,20 +80,23 @@ def open_backtest_window(root: tk.Tk) -> None:
                 return
 
             metrics = compute_metrics(trades)
+            dashboard = build_performance_dashboard(trades, diagnostics)
             with STATE._lock:
                 STATE.backtest_results = {
                     "trades": trades,
                     "equity_curve": equity_curve,
                     "metrics": metrics,
                     "params": params,
+                    "diagnostics": diagnostics,
+                    "dashboard": dashboard,
                 }
 
             def refresh() -> None:
                 progress_var.set(f"Done — {len(trades)} trades")
-                _refresh_summary(metrics["overall"], summary_lbl)
+                _refresh_summary(metrics["overall"], dashboard, summary_lbl)
                 _refresh_equity_canvas(equity_curve, equity_canvas)
                 _refresh_trades_table(trades, trades_tree)
-                _refresh_breakdown(metrics, regime_tree, sector_tree, month_tree)
+                _refresh_breakdown(metrics, regime_tree, sector_tree, type_tree, month_tree)
 
             _enqueue(refresh)
 
@@ -138,7 +141,7 @@ def open_backtest_window(root: tk.Tk) -> None:
     left = tk.Frame(content, bg=C.BG)
     left.pack(side="left", fill="y", padx=(0, 12))
     summary_lbl = tk.Label(
-        left, text="Win Rate: —\nTotal R: —\nMax DD: —\nSharpe: —\nProfit F: —",
+        left, text="Trades: n/a\nWin Rate: n/a\nAvg Return: n/a\nMax DD: n/a\nMissed: n/a",
         font=F_SMALL, fg=C.ACCENT2, bg=C.BG2, justify="left", padx=12, pady=10,
     )
     summary_lbl.pack(anchor="w")
@@ -164,9 +167,11 @@ def open_backtest_window(root: tk.Tk) -> None:
     nb.pack(fill="both", expand=True, padx=14, pady=4)
     regime_frm = tk.Frame(nb, bg=C.BG)
     sector_frm = tk.Frame(nb, bg=C.BG)
+    type_frm = tk.Frame(nb, bg=C.BG)
     month_frm = tk.Frame(nb, bg=C.BG)
     nb.add(regime_frm, text="By Regime")
     nb.add(sector_frm, text="By Sector")
+    nb.add(type_frm, text="By Type")
     nb.add(month_frm, text="By Month")
 
     rc = ("Regime", "Win%", "Avg R:R", "Trades")
@@ -183,6 +188,13 @@ def open_backtest_window(root: tk.Tk) -> None:
         sector_tree.column(c, width=120)
     sector_tree.pack(fill="both", expand=True)
 
+    tc = ("Trade Type", "Win%", "Trades", "Avg Return%", "Avg Risk%")
+    type_tree = ttk.Treeview(type_frm, columns=tc, show="headings", height=6)
+    for c in tc:
+        type_tree.heading(c, text=c)
+        type_tree.column(c, width=110)
+    type_tree.pack(fill="both", expand=True)
+
     mc = ("Month", "Return%", "Win%")
     month_tree = ttk.Treeview(month_frm, columns=mc, show="headings", height=6)
     for c in mc:
@@ -190,15 +202,31 @@ def open_backtest_window(root: tk.Tk) -> None:
         month_tree.column(c, width=100)
     month_tree.pack(fill="both", expand=True)
 
-    def _refresh_summary(overall: Dict[str, Any], lbl: tk.Label) -> None:
+    def _refresh_summary(overall: Dict[str, Any], dashboard: Dict[str, Any], lbl: tk.Label) -> None:
         o = overall or {}
+        missed = (dashboard or {}).get("missed_trades", {})
+        missed_analysis = (dashboard or {}).get("missed_trade_analysis", {})
+        recs = missed_analysis.get("recommendations", {})
+        conclusion = recs.get("conclusion", "")
+        missed_wins = missed_analysis.get("missed_wins", 0)
+        missed_losses = missed_analysis.get("missed_losses", 0)
+        missed_total = missed_analysis.get("total_missed", missed.get("count", 0))
+
+        missed_line = f"Missed: {missed_total}"
+        if missed_total > 0:
+            missed_line += f" (W:{missed_wins} L:{missed_losses})"
+        verdict = ""
+        if conclusion:
+            # Extract short Arabic/English verdict
+            verdict = f"\n{conclusion[:80]}"
+
         lbl.configure(
             text=(
-                f"Win Rate: {o.get('win_rate_pct', '—')}%\n"
-                f"Total R: {o.get('total_return_pct', '—')}%\n"
-                f"Max DD: {o.get('max_drawdown_pct', '—')}%\n"
-                f"Sharpe: {o.get('sharpe_ratio', '—')}\n"
-                f"Profit F: {o.get('profit_factor', '—')}"
+                f"Trades: {o.get('total_trades', 'n/a')}\n"
+                f"Win Rate: {o.get('win_rate_pct', 'n/a')}%\n"
+                f"Avg Return: {o.get('avg_return_pct', 'n/a')}%\n"
+                f"Max DD: {o.get('max_drawdown_pct', 'n/a')}%\n"
+                f"{missed_line}{verdict}"
             )
         )
 
@@ -251,9 +279,10 @@ def open_backtest_window(root: tk.Tk) -> None:
         metrics: Dict[str, Any],
         rt: ttk.Treeview,
         st: ttk.Treeview,
+        tt: ttk.Treeview,
         mt: ttk.Treeview,
     ) -> None:
-        for tree in (rt, st, mt):
+        for tree in (rt, st, tt, mt):
             tree.delete(*tree.get_children())
         for reg, data in (metrics.get("per_regime") or {}).items():
             rt.insert("", tk.END, values=(
@@ -269,9 +298,17 @@ def open_backtest_window(root: tk.Tk) -> None:
                 data.get("total_trades", 0),
                 f"{data.get('avg_return_pct', 0)}%",
             ))
+        for trade_type, data in (metrics.get("per_trade_type") or {}).items():
+            tt.insert("", tk.END, values=(
+                trade_type,
+                f"{data.get('win_rate_pct', 0)}%",
+                data.get("total_trades", 0),
+                f"{data.get('avg_return_pct', 0)}%",
+                f"{data.get('avg_risk_used_pct', 0)}%",
+            ))
         for m in metrics.get("monthly") or []:
             mt.insert("", tk.END, values=(
-                m.get("month", "—"),
+                m.get("month", "n/a"),
                 f"{m.get('return_pct', 0)}%",
                 f"{m.get('win_rate_pct', 0)}%",
             ))
@@ -280,7 +317,9 @@ def open_backtest_window(root: tk.Tk) -> None:
     with STATE._lock:
         data = STATE.backtest_results
     if data:
-        _refresh_summary(data.get("metrics", {}).get("overall", {}), summary_lbl)
+        _refresh_summary(data.get("metrics", {}).get("overall", {}), data.get("dashboard", {}), summary_lbl)
         _refresh_equity_canvas(data.get("equity_curve", []), equity_canvas)
         _refresh_trades_table(data.get("trades", []), trades_tree)
-        _refresh_breakdown(data.get("metrics", {}), regime_tree, sector_tree, month_tree)
+        _refresh_breakdown(data.get("metrics", {}), regime_tree, sector_tree, type_tree, month_tree)
+
+

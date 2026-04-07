@@ -1,0 +1,35 @@
+{
+  "before": {
+    "trades": 14,
+    "label_wr": 14.3,
+    "pnl_wr": 57.1,
+    "avg_pnl": -0.1,
+    "total_ret": -1.44,
+    "avg_win": 3.8,
+    "avg_loss": -5.31,
+    "max_loss": -5.44,
+    "pf": 0.95,
+    "max_dd": 2.06,
+    "misclassified": 5
+  },
+  "after": {
+    "trades": 3,
+    "label_wr": 33.3,
+    "pnl_wr": 66.7,
+    "avg_pnl": 0.1,
+    "total_ret": 0.29,
+    "avg_win": 1.87,
+    "avg_loss": -3.44,
+    "max_loss": -3.44,
+    "pf": 1.08,
+    "max_dd": 0.34,
+    "misclassified": 0
+  },
+  "improvements": [
+    "Fixed 5 misclassified trades (LOSS with positive PnL \u2192 now correctly WIN)",
+    "Avg loss improved: -5.31% \u2192 -3.44% (tighter stops)",
+    "Max drawdown improved: 2.06% \u2192 0.34%",
+    "Total return improved: -1.44% \u2192 +0.29%",
+    "Profit factor improved: 0.95 \u2192 1.08"
+  ]
+}

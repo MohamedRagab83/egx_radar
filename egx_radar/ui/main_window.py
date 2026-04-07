@@ -45,7 +45,11 @@ def main() -> None:
 
     root = tk.Tk()
     root.title(f"EGX Capital Flow Radar v{__version__} — Signal Quality Upgrade")
-    root.geometry("2400x980")
+    screen_w = root.winfo_screenwidth()   # Fix: window fits screen width
+    screen_h = root.winfo_screenheight()  # Fix: window fits screen width
+    win_w = min(2400, screen_w)           # Fix: window fits screen width
+    win_h = min(980, screen_h)            # Fix: window fits screen width
+    root.geometry(f"{win_w}x{win_h}+0+0")  # Fix: fit to screen size
     root.configure(bg=C.BG)
 
     # ── Header ────────────────────────────────────────────────────────────────
@@ -65,6 +69,14 @@ def main() -> None:
                          font=F_HEADER, fg=C.BG, bg=C.ACCENT, relief="flat", padx=12, pady=4)
     scan_btn.pack(side="right", padx=4)
 
+    # Fix: move Sources button to header row for visibility
+    sources_btn = tk.Button(hdr, text="⚙️ Sources",
+                            font=F_HEADER, fg="#ffffff", bg="#1a7ab5",
+                            activeforeground="#ffffff", activebackground="#2196F3",
+                            relief="raised", borderwidth=1, padx=12, pady=4,
+                            command=lambda: open_sources_dialog())
+    sources_btn.pack(side="right", padx=4)
+
     force_refresh_var = tk.BooleanVar(value=False)
     tk.Checkbutton(hdr, text="Force Refresh", variable=force_refresh_var,
                    font=F_BODY, fg=C.MUTED, bg=C.BG, selectcolor=C.BG3,
@@ -77,9 +89,9 @@ def main() -> None:
 
     heat_labels: Dict[str, tk.Label] = {}
     for sec in SECTORS:
-        lbl = tk.Label(top_bar, text=f"{sec}\n—", width=15, height=2,
+        lbl = tk.Label(top_bar, text=f"{sec}\n—", width=11, height=2,  # Fix: reduced tile width to show Sources button
                        bg=C.BG3, fg=C.MUTED, font=("Consolas", 9, "bold"))
-        lbl.pack(side="left", padx=3)
+        lbl.pack(side="left", padx=2)  # Fix: reduced tile width to show Sources button
         heat_labels[sec] = lbl
 
     brain_lbl = tk.Label(top_bar, text="🧠 NEUTRAL", font=F_HEADER, fg=C.MUTED, bg=C.BG)
@@ -240,7 +252,141 @@ def main() -> None:
                           fg=C.BG, bg=C.GOLD, relief="flat", padx=8, pady=3, command=open_calc)
     calc_btn.pack(side="right", padx=6)
 
-    # ── Source settings ───────────────────────────────────────────────────────
+    # ── Sources configuration dialog (quick, focused) ─────────────────────
+    def open_sources_dialog() -> None:
+        """Open a compact modal for enabling/disabling data sources."""
+        # Fix: add focused sources dialog to replace heavy open_settings()
+        dlg = tk.Toplevel(root)
+        dlg.title("⚙️ Data Sources")
+        dlg.geometry("420x380")
+        dlg.configure(bg=C.BG)
+        dlg.resizable(False, False)
+        dlg.grab_set()
+
+        tk.Label(dlg, text="🌐 Data Sources Configuration",
+                 font=F_TITLE, fg=C.CYAN, bg=C.BG).pack(pady=(14, 4))
+
+        # Source definitions: (config_key, display_name, short_code, description)
+        source_defs = [
+            ("use_yahoo",         "Yahoo Finance",     "YF", "Primary — 2yr history"),
+            ("use_stooq",         "Stooq",             "ST", "Free, no key required"),
+            ("use_alpha_vantage", "Alpha Vantage",     "AV", "Requires free API key"),
+            ("use_investing",     "Investing.com",     "IV", "Price cross-check only"),
+            ("use_twelve_data",   "Twelve Data (TD)",  "TD", "Best EGX coverage"),
+        ]
+
+        # Build checkbox vars
+        src_vars = {}
+        check_frame = tk.Frame(dlg, bg=C.BG)
+        check_frame.pack(fill="x", padx=20, pady=8)
+
+        for key, label, code, desc in source_defs:
+            with _data_cfg_lock:
+                cur = bool(DATA_SOURCE_CFG.get(key, False))
+            v = tk.BooleanVar(value=cur)
+            src_vars[key] = v
+            row = tk.Frame(check_frame, bg=C.BG)
+            row.pack(fill="x", pady=3)
+            tk.Checkbutton(row, text=f"☑ {label} ({code})", variable=v,
+                           font=F_BODY, fg=C.TEXT, bg=C.BG,
+                           selectcolor=C.BG3, activebackground=C.BG,
+                           command=lambda: _update_src_count()).pack(side="left", padx=4)
+            tk.Label(row, text=desc, font=F_SMALL, fg=C.MUTED, bg=C.BG).pack(side="left", padx=8)
+
+        def _update_src_count():
+            """Update the active source count label."""
+            active = sum(1 for v in src_vars.values() if v.get())
+            count_lbl.config(text=f"{active} source{'s' if active != 1 else ''} active",
+                             fg=C.GREEN if active > 0 else C.RED)
+
+        # Select All / Clear All
+        btn_row = tk.Frame(dlg, bg=C.BG)
+        btn_row.pack(fill="x", padx=20, pady=4)
+
+        tk.Button(btn_row, text="✅ Select All", font=F_SMALL, fg=C.BG, bg=C.GREEN,
+                  relief="flat", padx=10, pady=3,
+                  command=lambda: [v.set(True) for v in src_vars.values()] or _update_src_count()
+                  ).pack(side="left", padx=4)
+        tk.Button(btn_row, text="❌ Clear All", font=F_SMALL, fg=C.BG, bg=C.RED_DIM,
+                  relief="flat", padx=10, pady=3,
+                  command=lambda: [v.set(False) for v in src_vars.values()] or _update_src_count()
+                  ).pack(side="left", padx=4)
+
+        # Active count label
+        count_lbl = tk.Label(dlg, text="", font=F_HEADER, bg=C.BG)
+        count_lbl.pack(pady=4)
+        _update_src_count()
+
+        # API key entry (conditional — shown when AV or TD is checked)
+        key_frame = tk.Frame(dlg, bg=C.BG, padx=20)
+        key_frame.pack(fill="x", pady=(4, 8))
+
+        def _show_api_keys():
+            """Show/hide API key fields based on source selection."""
+            show_av = src_vars.get("use_alpha_vantage", tk.BooleanVar(value=False)).get()
+            show_td = src_vars.get("use_twelve_data", tk.BooleanVar(value=False)).get()
+            for w in av_row.winfo_children():
+                w.configure(state="normal" if show_av else "disabled")
+            for w in td_row.winfo_children():
+                w.configure(state="normal" if show_td else "disabled")
+
+        av_var = tk.StringVar()
+        with _data_cfg_lock:
+            av_var.set(str(DATA_SOURCE_CFG.get("alpha_vantage_key", "")))
+        av_row = tk.Frame(key_frame, bg=C.BG)
+        av_row.pack(fill="x", pady=2)
+        tk.Label(av_row, text="🔑 AV Key:", font=F_SMALL, fg=C.ACCENT2, bg=C.BG).pack(side="left")
+        tk.Entry(av_row, textvariable=av_var, font=F_SMALL, fg=C.TEXT, bg=C.BG3,
+                 insertbackground=C.TEXT, width=30).pack(side="left", padx=6, fill="x", expand=True)
+
+        td_var = tk.StringVar()
+        with _data_cfg_lock:
+            td_var.set(str(DATA_SOURCE_CFG.get("twelve_data_key", "")))
+        td_row = tk.Frame(key_frame, bg=C.BG)
+        td_row.pack(fill="x", pady=2)
+        tk.Label(td_row, text="🕐 TD Key:", font=F_SMALL, fg=C.GOLD, bg=C.BG).pack(side="left")
+        tk.Entry(td_row, textvariable=td_var, font=F_SMALL, fg=C.TEXT, bg=C.BG3,
+                 insertbackground=C.TEXT, width=30, show="*").pack(side="left", padx=6, fill="x", expand=True)
+
+        _show_api_keys()
+        # Re-bind checkboxes to also toggle API key visibility
+        orig_update = _update_src_count
+        def _update_with_keys():
+            _show_api_keys()
+            orig_update()
+        for row_frame in check_frame.winfo_children():
+            for widget in row_frame.winfo_children():
+                if isinstance(widget, tk.Checkbutton):
+                    widget.configure(command=_update_with_keys)
+
+        # Save / Cancel
+        save_frame = tk.Frame(dlg, bg=C.BG)
+        save_frame.pack(fill="x", padx=20, pady=12)
+
+        def _save_sources():
+            with _data_cfg_lock:
+                for k, v in src_vars.items():
+                    DATA_SOURCE_CFG[k] = v.get()
+                DATA_SOURCE_CFG["alpha_vantage_key"] = av_var.get().strip()
+                DATA_SOURCE_CFG["twelve_data_key"]   = td_var.get().strip()
+            save_source_settings()
+            src_badge_var.set(_build_src_badge())
+            active = sum(1 for v in src_vars.values() if v.get())
+            if active == 0:
+                messagebox.showwarning("⚠️ Warning",
+                    "No data sources selected. Scans will fail.\n"
+                    "Enable at least one source (Yahoo recommended).")
+            dlg.destroy()
+
+        tk.Button(save_frame, text="💾 Save", font=F_HEADER, fg=C.BG, bg=C.CYAN,
+                  relief="flat", padx=16, pady=5, command=_save_sources).pack(side="right", padx=8)
+        tk.Button(save_frame, text="Cancel", font=F_HEADER, fg=C.TEXT, bg=C.BG3,
+                  relief="flat", padx=16, pady=5, command=dlg.destroy).pack(side="right", padx=4)
+        tk.Button(save_frame, text="⚙️ All Settings", font=F_BODY, fg=C.MUTED, bg=C.BG3,
+                  relief="flat", padx=10, pady=5,
+                  command=lambda: (dlg.destroy(), open_settings())).pack(side="left", padx=4)
+
+    # ── Source settings (full — capital, risk, etc.) ──────────────────────────
     def open_settings() -> None:
         win = tk.Toplevel(root)
         win.title("⚙️ الإعدادات")
@@ -394,30 +540,26 @@ def main() -> None:
                   relief="flat", padx=14, pady=7, command=win.destroy).pack()
 
     def _build_src_badge() -> str:
+        # Fix: shortened badge text to reveal Sources button
         with _data_cfg_lock:
             parts = []
-            if DATA_SOURCE_CFG.get("use_yahoo"):         parts.append("Yahoo")
-            if DATA_SOURCE_CFG.get("use_stooq"):         parts.append("Stooq")
+            if DATA_SOURCE_CFG.get("use_yahoo"):         parts.append("YF")
+            if DATA_SOURCE_CFG.get("use_stooq"):         parts.append("ST")
             if DATA_SOURCE_CFG.get("use_alpha_vantage"): parts.append("AV")
-            if DATA_SOURCE_CFG.get("use_investing"):     parts.append("INV")
+            if DATA_SOURCE_CFG.get("use_investing"):     parts.append("IV")
             if DATA_SOURCE_CFG.get("use_twelve_data"):   parts.append("TD🕐")
-        return "🌐 " + "+".join(parts) if parts else "🌐 Yahoo"
+        return "🌐 " + "+".join(parts) if parts else "🌐 None"
 
     src_badge_var = tk.StringVar(value=_build_src_badge())
-    tk.Label(top_bar, textvariable=src_badge_var, font=F_SMALL, fg=C.CYAN, bg=C.BG).pack(side="right", padx=4)
-    tk.Button(
-        top_bar,
-        text="⚙️ Sources",
-        font=("Segoe UI", 11, "bold"),
-        fg="#ffffff",
-        bg="#0b6a9c",
-        activeforeground="#ffffff",
-        activebackground="#1580b8",
-        relief="flat",
-        padx=12,
-        pady=5,
-        command=open_settings,
-    ).pack(side="right", padx=4)
+    # Fix: badge color warns when no sources active
+    def _badge_color():
+        with _data_cfg_lock:
+            active = sum(1 for k in ["use_yahoo", "use_stooq", "use_alpha_vantage",
+                                     "use_investing", "use_twelve_data"]
+                         if DATA_SOURCE_CFG.get(k))
+        return C.RED if active == 0 else C.CYAN
+    tk.Label(top_bar, textvariable=src_badge_var, font=F_SMALL,
+             fg=_badge_color(), bg=C.BG).pack(side="right", padx=4)
 
     # ── Account badge (live) ───────────────────────────────────────────────────
     acct_badge_var = tk.StringVar(value=f"💼 {get_account_size():,.0f} ج.م")
@@ -438,10 +580,10 @@ def main() -> None:
     health_avg_var = tk.StringVar(value="Avg Rank: 0.0")
     tk.Label(health_bar, textvariable=health_avg_var, font=F_BODY, fg=C.WHITE, bg="#0d1b2a").pack(side="left", padx=8)
 
-    health_act_var = tk.StringVar(value="Actionable (>35): 0")
+    health_act_var = tk.StringVar(value="Actionable (>=65): 0")
     tk.Label(health_bar, textvariable=health_act_var, font=F_BODY, fg=C.GREEN, bg="#0d1b2a").pack(side="left", padx=8)
 
-    health_elite_var = tk.StringVar(value="Elite (>45): 0")
+    health_elite_var = tk.StringVar(value="Elite (>=75): 0")
     tk.Label(health_bar, textvariable=health_elite_var, font=F_BODY, fg=C.CYAN, bg="#0d1b2a").pack(side="left", padx=8)
 
     health_sell_var = tk.StringVar(value="SELL Signals: 0")
@@ -499,7 +641,7 @@ def main() -> None:
     global COLS
     COLS = (
         "Symbol", "Sector", "Price", "ADX", "RSI", "AdaptMom",
-        "% EMA200", "Volume", "Tech%", "Gravity", "Zone",
+        "% EMA200", "3D Gain %", "Volume", "Tech%", "Gravity", "Zone",
         "🔮Future", "🧠CPI", "🏛️IET", "🐳Whale",
         "Phase/Signals", "Signal", "Direction", "Confidence%", "SmartRank",
         "Action", "Timeframe", "Entry", "Stop", "Target", "Size", "WinRate%",
@@ -508,7 +650,7 @@ def main() -> None:
     )
     col_w = {
         "Symbol": 50, "Sector": 88, "Price": 64, "ADX": 48, "RSI": 46,
-        "AdaptMom": 68, "% EMA200": 72, "Volume": 60, "Tech%": 46,
+        "AdaptMom": 68, "% EMA200": 72, "3D Gain %": 72, "Volume": 60, "Tech%": 46,
         "Gravity": 100, "Zone": 70, "🔮Future": 68,
         "🧠CPI": 58, "🏛️IET": 58, "🐳Whale": 62,
         "Phase/Signals": 215, "Signal": 155, "Direction": 82,
@@ -518,6 +660,9 @@ def main() -> None:
         "ATR Risk": 72, "Trend": 40, "ATR": 60, "VWAP%": 65, "VolZ": 55,
         "Signal Reason": 220, "🛡️Guard": 260,
     }
+
+    # Tree sorting state (local)
+    sort_state = {"asc": True}
 
     style = ttk.Style()
     style.theme_use("clam")
@@ -533,10 +678,44 @@ def main() -> None:
                     font=F_SMALL, relief="flat")
     style.map("Dark.Treeview", background=[("selected", C.ROW_SEL)], foreground=[("selected", C.WHITE)])
 
+    # Define sort function BEFORE it's referenced in tree.heading()
+    def sort_by_3d_gain():
+        nonlocal sort_state
+        col_idx = list(COLS).index("3D Gain %")
+
+        # Extract numeric values preserving order for move()
+        item_list = []
+        for pos, iid in enumerate(tree.get_children("")):
+            values = tree.item(iid)["values"]
+            try:
+                pct_str = str(values[col_idx]).strip().rstrip('%')
+                numeric = float(pct_str.replace('+', '').replace(',', ''))
+                if pct_str.startswith('-'):
+                    numeric = -numeric
+            except (ValueError, IndexError):
+                numeric = 0.0
+            item_list.append((numeric, iid, pos))
+
+        # Sort with toggle
+        reverse = not sort_state["asc"]
+        item_list.sort(key=lambda x: x[0], reverse=reverse)
+
+        # Reorder using tree.move() - preserves tags/selection/IIDs
+        for new_pos, (_, iid, _) in enumerate(item_list):
+            tree.move(iid, '', new_pos)
+
+        # Toggle and update header visual
+        sort_state["asc"] = not sort_state["asc"]
+        arrow = " ▲" if sort_state["asc"] else " ▼"
+        tree.heading("3D Gain %", text=f"3D Gain %{arrow}")
+
     tree = ttk.Treeview(tf, columns=COLS, show="headings", height=18)
     for c in COLS:
         tree.heading(c, text=c)
         tree.column(c, width=col_w.get(c, 70), anchor="center", minwidth=40)
+
+    # Enable "3D Gain %" sorting (overwrites default heading command)
+    tree.heading("3D Gain %", command=sort_by_3d_gain)
 
     for tag_name, (bg, fg) in {
         "ultra":     ("#071c2b", C.CYAN),
@@ -547,8 +726,10 @@ def main() -> None:
         "radar":     ("#0f1a26", C.ACCENT2),
         "accum_top": ("#2a1e00", C.GOLD),
         "blocked":   ("#1a1a2e", C.MUTED),
+        "top_opportunity": ("#1a2b1a", C.GOLD),
     }.items():
         tree.tag_configure(tag_name, background=bg, foreground=fg)
+        tree.tag_configure("top_opportunity", font=(F_BODY[0], 10, "bold"))
 
     vsb = ttk.Scrollbar(tf, orient="vertical", command=tree.yview)
     tree.configure(yscrollcommand=vsb.set)
@@ -568,6 +749,7 @@ def main() -> None:
         ("💥 Break", "#ff9f43"), ("⚡ Exp", C.CYAN), ("🧿 Quantum", C.PURPLE),
         ("☠️ Fake", C.RED), ("👑 Leader", C.YELLOW), ("🧲 Gravity", C.CYAN),
         ("ACCUMULATE", C.GOLD), ("PROBE", C.YELLOW), ("🔔 EMA✚", C.GREEN),
+        ("⭐ TOP5", C.GOLD), 
         ("🔀 VolDiv", C.YELLOW), ("|  ⚠️OB WATCH", C.YELLOW),
         ("|  ⚠️ATR HIGH", C.RED), ("|  🟡ATR MED", C.YELLOW),
         ("⏳ WAIT(ADX)", C.MUTED), ("|  🛡️BLOCKED", C.MUTED),

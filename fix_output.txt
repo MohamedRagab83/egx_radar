@@ -1,0 +1,16 @@
+﻿Non-ASCII characters in file:
+  U+2014  'ΓÇö'  count=7
+  U+2026  'ΓÇª'  count=2
+  U+25B6  'Γû╢'  count=1
+  U+2705  'Γ£à'  count=1
+  U+FEFF  '\ufeff'  count=1
+  U+1F4BE  '≡ƒÆ╛'  count=1
+  U+1F4CA  '≡ƒôè'  count=1
+Not found: '├óΓé¼ΓÇ¥'
+Not found: '├óΓé¼┬ª'
+Not found: '├░┼╕ΓÇ£┼á'
+Not found: '├░┼╕ΓÇÿ┬╛'
+Not found: '├óΓÇô┬╢'
+Not found: '├ó┼ôΓÇª'
+
+No replacements made. Check the mappings above against actual chars.

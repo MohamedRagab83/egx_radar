@@ -1,4 +1,4 @@
-"""Scoring engine: component and SmartRank scores (Layer 4)."""
+"""Scoring engine: SmartRank component scores and composite ranking (Layer 4)."""
 
 import logging
 import math
@@ -51,16 +51,16 @@ def score_capital_pressure(
         raw += 1.2
     if vwap_dist < -0.01:
         raw += min(1.0, abs(vwap_dist) * 4.0)
-        
-    # Feature 3: Micro-Structure Volume Analysis
+
+    # Feature 3: Micro-structure Volume Analysis
     if is_vcp:
         raw += 1.5  # Bonus for volatility contraction
-        
+
     if ud_ratio < 0.7:
         raw -= 1.0  # Softened penalty for down-volume dominance in EGX
     elif ud_ratio > 1.5:
         raw += 1.0  # Bonus for strong up-volume dominance
-        
+
     final_score = _norm(safe_clamp(raw, 0.0, 10.0), 0.0, 10.0)
     # Floor at config minimum so structurally sound stocks don't lose the entire 20% FLOW weight
     return max(K.CPI_FLOOR, final_score)
@@ -295,26 +295,25 @@ def smart_rank_score(
 
     # ── Late-entry penalty damper (multiplicative) ────────────────────────
     # Kept multiplicative so we never go below 0 unnaturally
-    
+
     # Feature: Momentum Acceleration Exemption
     # If a stock demonstrates extreme confirmed momentum, ignore certain late-entry dampers.
     acceleration_condition = (
         adaptive_mom > 2.5 and
-        adx > 30 and
         vol_ratio > 1.8 and
         vol_div != "🔀BEAR_DIV" and
         tag != "sell"
     )
 
     damper = 1.0
-    
+
     if not acceleration_condition:
         if rsi > 70:                            damper *= 0.85
         if pct_ema200 > 35:                     damper *= 0.85
         if market_soft and tag == "buy":        damper *= 0.88
         if len(sig_hist) >= 3 and all(h == "buy" for h in sig_hist[-3:]):
             damper *= 0.85
-            
+
     # Always apply these structural/distribution penalties
     if fake_expansion:                      damper *= 0.70
     if vol_div == "🔀BEAR_DIV":             damper *= 0.88

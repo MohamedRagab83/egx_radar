@@ -1,0 +1,259 @@
+{
+  "diagnosis": {
+    "legacy_metrics": {
+      "trades": 135,
+      "return_pct": -20.25,
+      "winrate_pct": 30.37,
+      "drawdown_pct": 20.25,
+      "sharpe": -2.63,
+      "expectancy_pct": -0.84
+    },
+    "legacy_exit_mix": {
+      "STOP": 83,
+      "TARGET": 31,
+      "TIME": 15,
+      "FINAL": 6
+    },
+    "entry_quality": {
+      "sampled_entries": 135,
+      "trend_fail_pct": 8.15,
+      "rsi_outside_45_65_pct": 43.7,
+      "volume_ratio_le_1_2_pct": 41.48,
+      "atr_pct_gt_3_pct": 0.0
+    },
+    "legacy_smart_rank_buckets": [
+      {
+        "bucket": "55-60",
+        "count": 20,
+        "winrate_pct": 45.0,
+        "expectancy_pct": 0.4039
+      },
+      {
+        "bucket": "60-65",
+        "count": 17,
+        "winrate_pct": 17.65,
+        "expectancy_pct": -1.923
+      },
+      {
+        "bucket": "65-70",
+        "count": 30,
+        "winrate_pct": 40.0,
+        "expectancy_pct": -0.2832
+      },
+      {
+        "bucket": "70-75",
+        "count": 29,
+        "winrate_pct": 27.59,
+        "expectancy_pct": -0.8488
+      },
+      {
+        "bucket": "75-100",
+        "count": 39,
+        "winrate_pct": 23.08,
+        "expectancy_pct": -1.4157
+      }
+    ]
+  },
+  "comparison": {
+    "old": {
+      "trades": 135,
+      "return_pct": -20.25,
+      "winrate_pct": 30.37,
+      "drawdown_pct": 20.25,
+      "sharpe": -2.63,
+      "expectancy_pct": -0.84
+    },
+    "new": {
+      "trades": 6,
+      "return_pct": -0.88,
+      "winrate_pct": 33.33,
+      "drawdown_pct": 1.38,
+      "sharpe": -0.44,
+      "expectancy_pct": -0.78
+    },
+    "new_params": {
+      "rsi_min": 45.0,
+      "rsi_max": 63.0,
+      "volume_min": 1.25,
+      "atr_pct_max": 0.03,
+      "score_threshold": 62.0
+    },
+    "optimizer_top": [
+      {
+        "params": {
+          "rsi_min": 45.0,
+          "rsi_max": 63.0,
+          "volume_min": 1.25,
+          "atr_pct_max": 0.03,
+          "score_threshold": 62.0
+        },
+        "metrics": {
+          "trades": 6,
+          "return_pct": -0.88,
+          "winrate_pct": 33.33,
+          "drawdown_pct": 1.38,
+          "sharpe": -0.44,
+          "expectancy_pct": -0.78
+        },
+        "objective": 22.584
+      },
+      {
+        "params": {
+          "rsi_min": 44.0,
+          "rsi_max": 64.0,
+          "volume_min": 1.2,
+          "atr_pct_max": 0.03,
+          "score_threshold": 60.0
+        },
+        "metrics": {
+          "trades": 9,
+          "return_pct": -3.02,
+          "winrate_pct": 22.22,
+          "drawdown_pct": 3.02,
+          "sharpe": -1.28,
+          "expectancy_pct": -1.42
+        },
+        "objective": 9.536
+      },
+      {
+        "params": {
+          "rsi_min": 47.0,
+          "rsi_max": 65.0,
+          "volume_min": 1.15,
+          "atr_pct_max": 0.035,
+          "score_threshold": 58.0
+        },
+        "metrics": {
+          "trades": 17,
+          "return_pct": -3.86,
+          "winrate_pct": 23.53,
+          "drawdown_pct": 4.82,
+          "sharpe": -1.24,
+          "expectancy_pct": -1.01
+        },
+        "objective": 8.688
+      },
+      {
+        "params": {
+          "rsi_min": 45.0,
+          "rsi_max": 65.0,
+          "volume_min": 1.2,
+          "atr_pct_max": 0.035,
+          "score_threshold": 62.0
+        },
+        "metrics": {
+          "trades": 10,
+          "return_pct": -3.48,
+          "winrate_pct": 20.0,
+          "drawdown_pct": 3.48,
+          "sharpe": -1.45,
+          "expectancy_pct": -1.49
+        },
+        "objective": 6.856
+      },
+      {
+        "params": {
+          "rsi_min": 46.0,
+          "rsi_max": 66.0,
+          "volume_min": 1.1,
+          "atr_pct_max": 0.035,
+          "score_threshold": 60.0
+        },
+        "metrics": {
+          "trades": 16,
+          "return_pct": -4.95,
+          "winrate_pct": 18.75,
+          "drawdown_pct": 4.95,
+          "sharpe": -1.7,
+          "expectancy_pct": -1.36
+        },
+        "objective": 3.816
+      },
+      {
+        "params": {
+          "rsi_min": 43.0,
+          "rsi_max": 67.0,
+          "volume_min": 1.1,
+          "atr_pct_max": 0.035,
+          "score_threshold": 56.0
+        },
+        "metrics": {
+          "trades": 29,
+          "return_pct": -7.25,
+          "winrate_pct": 24.14,
+          "drawdown_pct": 8.7,
+          "sharpe": -1.86,
+          "expectancy_pct": -1.15
+        },
+        "objective": 2.632
+      },
+      {
+        "params": {
+          "rsi_min": 45.0,
+          "rsi_max": 65.0,
+          "volume_min": 1.05,
+          "atr_pct_max": 0.04,
+          "score_threshold": 55.0
+        },
+        "metrics": {
+          "trades": 32,
+          "return_pct": -8.9,
+          "winrate_pct": 25.0,
+          "drawdown_pct": 10.33,
+          "sharpe": -2.11,
+          "expectancy_pct": -1.29
+        },
+        "objective": 0.376
+      },
+      {
+        "params": {
+          "rsi_min": 44.0,
+          "rsi_max": 64.0,
+          "volume_min": 1.1,
+          "atr_pct_max": 0.03,
+          "score_threshold": 58.0
+        },
+        "metrics": {
+          "trades": 13,
+          "return_pct": -6.33,
+          "winrate_pct": 15.38,
+          "drawdown_pct": 6.33,
+          "sharpe": -2.11,
+          "expectancy_pct": -2.15
+        },
+        "objective": -2.984
+      }
+    ],
+    "improved": {
+      "expectancy": true,
+      "drawdown": true,
+      "winrate": true
+    },
+    "parity_v2": {
+      "baseline": {
+        "trades": 6,
+        "return_pct": -0.88,
+        "winrate_pct": 33.33,
+        "drawdown_pct": 1.38,
+        "sharpe": -0.44,
+        "expectancy_pct": -0.78
+      },
+      "ai": {
+        "trades": 6,
+        "return_pct": -0.88,
+        "winrate_pct": 33.33,
+        "drawdown_pct": 1.38,
+        "sharpe": -0.44,
+        "expectancy_pct": -0.78
+      },
+      "alpha": {
+        "trades": 6,
+        "return_pct": -0.88,
+        "winrate_pct": 33.33,
+        "drawdown_pct": 1.38,
+        "sharpe": -0.44,
+        "expectancy_pct": -0.78
+      }
+    }
+  }
+}

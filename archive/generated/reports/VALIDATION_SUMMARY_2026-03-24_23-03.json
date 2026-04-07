@@ -1,0 +1,19 @@
+{
+  "total_trades": 42,
+  "total_missed": 29,
+  "win_rate": 52.4,
+  "total_pnl": 30.39,
+  "max_drawdown": 5.49,
+  "expectancy": 0.7236,
+  "criteria": {
+    "trades_sufficient": true,
+    "win_rate_ok": false,
+    "drawdown_ok": false,
+    "consistency_ok": false,
+    "expectancy_ok": true,
+    "profit_factor_ok": true
+  },
+  "failures": 0,
+  "warnings": 3,
+  "verdict": "NOT READY"
+}

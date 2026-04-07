@@ -1,12 +1,19 @@
-"""Data layer: source fetchers and OHLCV merge/orchestration (Layer 2)."""
+"""Data layer: source fetchers, OHLCV merge/orchestration, and DataEngine (Layer 2).
+
+SECURITY NOTE (Phase 1 - Security Hardening):
+  API keys are now managed via egx_radar.utils.secrets.SecretManager.
+  Legacy _obfuscate/_deobfuscate functions removed (insecure base64 encoding).
+"""
 
 import logging
 
 log = logging.getLogger(__name__)
 
+# SECURITY FIX (Phase 1): Removed _obfuscate/_deobfuscate imports
+# API keys now managed via SecureManager in egx_radar.utils.secrets
 from egx_radar.data.fetchers import (
-    _obfuscate,
-    _deobfuscate,
+    # _obfuscate,       # REMOVED - insecure base64 obfuscation
+    # _deobfuscate,     # REMOVED - insecure base64 deobfuscation
     load_source_settings,
     save_source_settings,
     _atomic_json_write,
@@ -31,10 +38,25 @@ from egx_radar.data.merge import (
     _source_labels_lock,
 )
 
+from egx_radar.data.source_scoring import (
+    score_source,
+    rank_sources,
+    get_cache_snapshot,
+    QUALITY_THRESHOLD,
+    FALLBACK_THRESHOLD,
+)
+
+# DataEngine uses lazy imports to avoid circular dependency with backtest.data_loader.
+# Import it last, and access via get_data_engine() at call time.
+from egx_radar.data.data_engine import (
+    DataEngine,
+    get_data_engine,
+)
+
 __all__ = [
-    # fetchers
-    "_obfuscate",
-    "_deobfuscate",
+    # fetchers - SECURITY FIX: removed _obfuscate/_deobfuscate
+    # "_obfuscate",    # REMOVED - insecure base64 obfuscation
+    # "_deobfuscate",  # REMOVED - insecure base64 deobfuscation
     "load_source_settings",
     "save_source_settings",
     "_atomic_json_write",
@@ -55,4 +77,13 @@ __all__ = [
     "download_all",
     "_source_labels",
     "_source_labels_lock",
+    # source scoring
+    "score_source",
+    "rank_sources",
+    "get_cache_snapshot",
+    "QUALITY_THRESHOLD",
+    "FALLBACK_THRESHOLD",
+    # data engine
+    "DataEngine",
+    "get_data_engine",
 ]

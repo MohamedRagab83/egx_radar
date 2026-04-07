@@ -16,6 +16,12 @@ from egx_radar.data.fetchers import (
     _fetch_investing,
     _fetch_twelve_data,
 )
+from egx_radar.data.source_scoring import (
+    rank_sources,
+    cache_best_source,
+    QUALITY_THRESHOLD,
+    FALLBACK_THRESHOLD,
+)
 
 log = logging.getLogger(__name__)
 
@@ -75,27 +81,27 @@ _source_labels_lock = threading.Lock()
 
 def _merge_ohlcv(
     sym: str,
-    yahoo_df: Optional[pd.DataFrame],
-    stooq_df: Optional[pd.DataFrame],
-    av_df:    Optional[pd.DataFrame],
-    inv_price: Optional[float],
-    td_df:    Optional[pd.DataFrame] = None,
+    sources: List[Tuple[Optional[pd.DataFrame], str]],
+    inv_price: Optional[float] = None,
 ) -> Tuple[Optional[pd.DataFrame], str]:
-    """
-    Select best available OHLCV source with priority:
-      Yahoo-available:  Yahoo > Stooq > TD > AV
-      Yahoo-absent:     TD    > Stooq > AV
-    Consensus close = trimmed mean of sources within 5% of each other.
-    """
-    yahoo_ok = yahoo_df is not None and len(yahoo_df) >= K.MIN_BARS
+    """Select best available OHLCV source with priority-ordered candidates.
 
-    for df_, label in [(yahoo_df, "Yahoo"), (stooq_df, "Stooq"), (av_df, "AV"), (td_df, "TD")]:
-        if df_ is not None:
-            if "Volume" not in df_.columns:
-                df_.loc[:, "Volume"] = 0.0
+    Args:
+        sym:        Internal symbol name (e.g. "COMI").
+        sources:    List of (DataFrame_or_None, source_label) in priority order.
+                    Priority is determined by position: first = highest priority.
+        inv_price:  Optional Investing.com spot price for cross-check.
+
+    Returns:
+        (merged_df, source_label_string) or (None, "—").
+    """
+    # Ensure Volume column exists on every non-None source
+    for df_, label in sources:
+        if df_ is not None and "Volume" not in df_.columns:
+            df_.loc[:, "Volume"] = 0.0
 
     candidates: List[Tuple[pd.DataFrame, str]] = []
-    for df_, lbl in [(yahoo_df, "Yahoo"), (stooq_df, "Stooq"), (av_df, "AV"), (td_df, "TD")]:
+    for df_, lbl in sources:
         if df_ is None or "Close" not in df_.columns:
             continue
         thresh = K.MIN_BARS if lbl == "Yahoo" else K.MIN_BARS_RELAXED
@@ -109,9 +115,37 @@ def _merge_ohlcv(
     if not candidates:
         return None, "—"
 
-    priority = ["Yahoo", "Stooq", "TD", "AV"] if yahoo_ok else ["TD", "Stooq", "AV"]
-    candidates.sort(key=lambda x: priority.index(x[1]) if x[1] in priority else 99)
+    # ── Adaptive source selection (replaces fixed priority) ────────────
+    ranked = rank_sources(candidates, sym)
+    best_df, best_label, best_score = ranked[0]
+
+    if best_score["total"] < QUALITY_THRESHOLD:
+        log.warning(
+            "_merge_ohlcv %s: best source %s quality=%.2f < threshold %.2f — discarding",
+            sym, best_label, best_score["total"], QUALITY_THRESHOLD,
+        )
+        return None, "—"
+
+    fallback_reason = ""
+    if best_score["total"] < FALLBACK_THRESHOLD:
+        fallback_reason = f"low quality ({best_score['total']:.2f})"
+        log.warning(
+            "_merge_ohlcv %s: %s quality=%.2f — fallback active",
+            sym, best_label, best_score["total"],
+        )
+
+    # Re-order candidates by score for downstream consensus close
+    candidates = [(df, lbl) for df, lbl, _ in ranked]
     base_df, base_src = candidates[0]
+
+    cache_best_source(sym, base_src)
+
+    log.debug(
+        "_merge_ohlcv %s: adaptive → %s (score=%.2f%s) | %s",
+        sym, base_src, best_score["total"],
+        f" FALLBACK: {fallback_reason}" if fallback_reason else "",
+        " > ".join(f"{lbl}={sc['total']:.2f}" for _, lbl, sc in ranked),
+    )
 
     # Drop rows where Close is NaN to prevent propagation
     base_df = base_df.copy()
@@ -247,22 +281,40 @@ def download_all() -> Dict[str, pd.DataFrame]:
     merged: Dict[str, pd.DataFrame] = {}
     local_labels: Dict[str, str]    = {}
 
-    for sym in sym_list:
+    # Parallelize _merge_ohlcv calls across symbols
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    def _merge_one(sym):
         df_y  = yahoo_by_sym.get(sym)
         df_s  = stooq_by_sym.get(sym)
-        with _av_lock:           # FIX: safely read av_by_sym
+        with _av_lock:
             df_a = av_by_sym.get(sym)
         df_t  = td_by_sym.get(sym)
         inv_p = inv_prices.get(sym)
 
-        df_final, label = _merge_ohlcv(sym, df_y, df_s, df_a, inv_p, td_df=df_t)
-        if df_final is not None:
-            # Ensure Volume column exists
-            if "Volume" not in df_final.columns:
-                df_final = df_final.copy()
-                df_final["Volume"] = 0.0
-            merged[SYMBOLS[sym]] = df_final
-            local_labels[sym]    = label
+        source_list: List[Tuple[Optional[pd.DataFrame], str]] = [
+            (df_y, "Yahoo"),
+            (df_s, "Stooq"),
+            (df_t, "TD"),
+            (df_a, "AV"),
+        ]
+        return sym, _merge_ohlcv(sym, source_list, inv_price=inv_p)
+
+    max_workers = min(K.SCAN_MAX_WORKERS, len(sym_list))
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = {executor.submit(_merge_one, sym): sym for sym in sym_list}
+        for future in as_completed(futures):
+            try:
+                sym, (df_final, label) = future.result()
+                if df_final is not None:
+                    if "Volume" not in df_final.columns:
+                        df_final = df_final.copy()
+                        df_final["Volume"] = 0.0
+                    merged[SYMBOLS[sym]] = df_final
+                    local_labels[sym] = label
+            except Exception as exc:
+                sym = futures[future]
+                log.warning("merge failed for %s: %s", sym, exc)
 
     # Add EGX30 Proxy to merged results if available from Yahoo
     egx_proxy_sym = K.EGX30_SYMBOL.replace(".CA", "") # It shouldn't have .CA, but just in case

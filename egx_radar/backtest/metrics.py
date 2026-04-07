@@ -22,10 +22,11 @@ def compute_metrics(trades: List[dict]) -> Dict[str, Any]:
 
     # Overall
     total_trades = len(trades)
-    wins = [t for t in trades if t.get("outcome") == "WIN"]
-    losses = [t for t in trades if t.get("outcome") == "LOSS"]
+    wins = [t for t in trades if t.get("pnl_pct", 0) > 0]
+    losses = [t for t in trades if t.get("pnl_pct", 0) <= 0]
     win_rate = len(wins) / total_trades * 100 if total_trades else 0.0
     rr_list = [t["rr"] for t in trades if t.get("rr") is not None]
+    avg_return = sum(t.get("pnl_pct", 0.0) for t in trades) / total_trades if total_trades else 0.0
     avg_rr = sum(rr_list) / len(rr_list) if rr_list else 0.0
     total_return = sum(t["pnl_pct"] for t in trades)
     gross_profit = sum(t["pnl_pct"] for t in wins)
@@ -36,17 +37,24 @@ def compute_metrics(trades: List[dict]) -> Dict[str, Any]:
     largest_win = max((t["pnl_pct"] for t in wins), default=0.0)
     largest_loss = min((t["pnl_pct"] for t in losses), default=0.0)
 
-    # Equity curve for drawdown (20% position sizing per trade)
-    equity_m = 100.0
-    peak = 100.0
+    # Equity curve for drawdown using actual backtest allocations when available.
+    if all(t.get("equity_after") is not None for t in trades):
+        equity_points = [100.0] + [float(t["equity_after"]) for t in trades]
+    else:
+        equity_points = [100.0]
+        equity_m = 100.0
+        for t in trades:
+            alloc = float(t.get("alloc_pct", 0.20))
+            equity_m *= (1 + alloc * t["pnl_pct"] / 100)
+            equity_points.append(equity_m)
+    peak = equity_points[0]
     max_dd = 0.0
-    for t in trades:
-        equity_m *= (1 + 0.20 * t["pnl_pct"] / 100)
-        peak = max(peak, equity_m)
-        dd = (peak - equity_m) / peak * 100 if peak > 0 else 0.0
+    for point in equity_points[1:]:
+        peak = max(peak, point)
+        dd = (peak - point) / peak * 100 if peak > 0 else 0.0
         max_dd = max(max_dd, dd)
     max_drawdown_pct = max_dd
-    total_return = (equity_m - 100.0) / 100.0 * 100  # override additive total_return
+    total_return = (equity_points[-1] - 100.0) / 100.0 * 100
 
     # Sharpe: annualized, scaled by trades-per-year (not sqrt(252))
     # since these are per-trade returns, not daily returns
@@ -65,6 +73,8 @@ def compute_metrics(trades: List[dict]) -> Dict[str, Any]:
     overall = {
         "total_trades": total_trades,
         "win_rate_pct": round(win_rate, 1),
+        "avg_return_pct": round(avg_return, 2),
+        "expectancy_pct": round(avg_return, 2),
         "avg_rr": round(avg_rr, 2),
         "total_return_pct": round(total_return, 2),
         "max_drawdown_pct": round(max_drawdown_pct, 2),
@@ -85,7 +95,7 @@ def compute_metrics(trades: List[dict]) -> Dict[str, Any]:
     for reg, data in by_regime.items():
         tr = data["trades"]
         n = len(tr)
-        w = sum(1 for x in tr if x.get("outcome") == "WIN")
+        w = sum(1 for x in tr if x.get("pnl_pct", 0) > 0)
         wr = w / n * 100 if n else 0.0
         rrs = [x["rr"] for x in tr if x.get("rr") is not None]
         per_regime[reg] = {
@@ -101,11 +111,29 @@ def compute_metrics(trades: List[dict]) -> Dict[str, Any]:
     per_signal = {}
     for sig, tr in by_signal.items():
         n = len(tr)
-        w = sum(1 for x in tr if x.get("outcome") == "WIN")
+        w = sum(1 for x in tr if x.get("pnl_pct", 0) > 0)
         rrs = [x["rr"] for x in tr if x.get("rr") is not None]
         per_signal[sig] = {
             "win_rate_pct": round(w / n * 100, 1) if n else 0.0,
             "avg_rr": round(sum(rrs) / len(rrs), 2) if rrs else 0.0,
+            "avg_return_pct": round(sum(x.get("pnl_pct", 0.0) for x in tr) / n, 2) if n else 0.0,
+            "total_trades": n,
+        }
+
+    # Per trade type
+    by_trade_type: Dict[str, List[dict]] = defaultdict(list)
+    for t in trades:
+        by_trade_type[t.get("trade_type", "UNCLASSIFIED")].append(t)
+    per_trade_type = {}
+    for trade_type, tr in by_trade_type.items():
+        n = len(tr)
+        w = sum(1 for x in tr if x.get("pnl_pct", 0) > 0)
+        rrs = [x["rr"] for x in tr if x.get("rr") is not None]
+        per_trade_type[trade_type] = {
+            "win_rate_pct": round(w / n * 100, 1) if n else 0.0,
+            "avg_return_pct": round(sum(x.get("pnl_pct", 0.0) for x in tr) / n, 2) if n else 0.0,
+            "avg_rr": round(sum(rrs) / len(rrs), 2) if rrs else 0.0,
+            "avg_risk_used_pct": round(sum(float(x.get("risk_used", 0.0)) for x in tr) / n * 100.0, 2) if n else 0.0,
             "total_trades": n,
         }
 
@@ -116,7 +144,7 @@ def compute_metrics(trades: List[dict]) -> Dict[str, Any]:
     per_sector = {}
     for sec, tr in by_sector.items():
         n = len(tr)
-        w = sum(1 for x in tr if x.get("outcome") == "WIN")
+        w = sum(1 for x in tr if x.get("pnl_pct", 0) > 0)
         ret = sum(x["pnl_pct"] for x in tr)
         per_sector[sec] = {
             "win_rate_pct": round(w / n * 100, 1) if n else 0.0,
@@ -131,7 +159,7 @@ def compute_metrics(trades: List[dict]) -> Dict[str, Any]:
     per_symbol = {}
     for sym, tr in by_sym.items():
         n = len(tr)
-        w = sum(1 for x in tr if x.get("outcome") == "WIN")
+        w = sum(1 for x in tr if x.get("pnl_pct", 0) > 0)
         ret = sum(x["pnl_pct"] for x in tr)
         pnls = [x["pnl_pct"] for x in tr]
         per_symbol[sym] = {
@@ -153,9 +181,10 @@ def compute_metrics(trades: List[dict]) -> Dict[str, Any]:
     for month in sorted(by_month.keys()):
         tr = by_month[month]
         ret = sum(x["pnl_pct"] for x in tr)
-        w = sum(1 for x in tr if x.get("outcome") == "WIN")
+        w = sum(1 for x in tr if x.get("pnl_pct", 0) > 0)
         monthly.append({
             "month": month,
+            "trade_count": len(tr),
             "return_pct": round(ret, 2),
             "win_rate_pct": round(w / len(tr) * 100, 1) if tr else 0.0,
         })
@@ -164,6 +193,7 @@ def compute_metrics(trades: List[dict]) -> Dict[str, Any]:
         "overall": overall,
         "per_regime": dict(per_regime),
         "per_signal": per_signal,
+        "per_trade_type": per_trade_type,
         "per_sector": per_sector,
         "per_symbol": per_symbol,
         "monthly": monthly,
@@ -175,6 +205,8 @@ def _empty_metrics() -> Dict[str, Any]:
         "overall": {
             "total_trades": 0,
             "win_rate_pct": 0.0,
+            "avg_return_pct": 0.0,
+            "expectancy_pct": 0.0,
             "avg_rr": 0.0,
             "total_return_pct": 0.0,
             "max_drawdown_pct": 0.0,
@@ -186,8 +218,8 @@ def _empty_metrics() -> Dict[str, Any]:
         },
         "per_regime": {},
         "per_signal": {},
+        "per_trade_type": {},
         "per_sector": {},
         "per_symbol": {},
         "monthly": [],
     }
-

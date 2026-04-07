@@ -1,0 +1,71 @@
+{
+  "run_at": "2026-03-25T16:35:38.183226",
+  "date_from": "2024-01-01",
+  "date_to": "2024-12-31",
+  "symbols_loaded": 27,
+  "results": [
+    {
+      "label": "Baseline",
+      "trades": 3,
+      "win_rate": 33.3,
+      "profit_factor": 0.1,
+      "expectancy": -2.8,
+      "max_dd": 0.5,
+      "sharpe": -5.85,
+      "avg_bars": 6.3,
+      "total_return": -0.5
+    },
+    {
+      "label": "No Regime",
+      "trades": 4,
+      "win_rate": 25.0,
+      "profit_factor": 0.07,
+      "expectancy": -3.0,
+      "max_dd": 1.54,
+      "sharpe": -7.05,
+      "avg_bars": 7.5,
+      "total_return": -1.54
+    },
+    {
+      "label": "No SmartRank",
+      "trades": 0,
+      "win_rate": null,
+      "profit_factor": null,
+      "expectancy": null,
+      "max_dd": null
+    },
+    {
+      "label": "No Accumulation",
+      "trades": 2,
+      "win_rate": 0.0,
+      "profit_factor": 0.0,
+      "expectancy": -4.68,
+      "max_dd": 0.54,
+      "sharpe": -32.49,
+      "avg_bars": 5.0,
+      "total_return": -0.54
+    },
+    {
+      "label": "No Guards",
+      "trades": 3,
+      "win_rate": 33.3,
+      "profit_factor": 0.1,
+      "expectancy": -2.8,
+      "max_dd": 0.5,
+      "sharpe": -5.85,
+      "avg_bars": 6.3,
+      "total_return": -0.5
+    },
+    {
+      "label": "Raw System",
+      "trades": 12,
+      "win_rate": 41.7,
+      "profit_factor": 0.52,
+      "expectancy": -1.02,
+      "max_dd": 1.72,
+      "sharpe": -2.3,
+      "avg_bars": 5.0,
+      "total_return": -1.11
+    }
+  ]
+}

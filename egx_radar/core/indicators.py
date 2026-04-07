@@ -150,26 +150,31 @@ def detect_vol_divergence(close: pd.Series, volume: pd.Series, lookback: int = 5
 
 
 def compute_ud_ratio(close: pd.Series, period: int = 14) -> float:
-    """Compute Up/Down ratio (used in RSI-style calculations)."""
+    """Compute a true up/down ratio around 1.0, not an RSI value."""
     try:
-        # Ensure input is a 1-D Series, not a DataFrame
         if isinstance(close, pd.DataFrame):
-            close = close.iloc[:, 0]
+            if "Close" in close.columns:
+                close = close["Close"]
+            else:
+                close = close.iloc[:, 0]
+        close = pd.Series(close).astype(float).dropna()
+        if len(close) < period + 1:
+            return 1.0
         delta = close.diff()
-        gain = delta.where(delta > 0, 0.0)
-        loss = (-delta).where(delta < 0, 0.0)
+        gain = delta.clip(lower=0.0)
+        loss = (-delta).clip(lower=0.0)
         avg_gain = gain.rolling(window=period, min_periods=period).mean()
         avg_loss = loss.rolling(window=period, min_periods=period).mean()
-        # Extract explicit scalars to avoid "truth value of Series" error
-        avg_loss_val = float(avg_loss.iloc[-1])
         avg_gain_val = float(avg_gain.iloc[-1])
-        if avg_loss_val == 0:
-            return 100.0
-        rs = avg_gain_val / avg_loss_val
-        return 100.0 - (100.0 / (1.0 + rs))
+        avg_loss_val = float(avg_loss.iloc[-1])
+        if avg_gain_val <= 1e-9 and avg_loss_val <= 1e-9:
+            return 1.0
+        if avg_loss_val <= 1e-9:
+            return 3.0
+        return safe_clamp(avg_gain_val / avg_loss_val, 0.0, 3.0)
     except Exception as exc:
         log.debug("compute_ud_ratio failed for input: %s", exc)
-        return 50.0
+        return 1.0
 
 
 def detect_vcp(df: pd.DataFrame, lookback: int = 20) -> bool:
@@ -327,4 +332,3 @@ def quantile_norm(value: float, series: pd.Series) -> float:
     except Exception as exc:
         log.debug("quantile_norm failed: %s", exc)
         return 0.5
-

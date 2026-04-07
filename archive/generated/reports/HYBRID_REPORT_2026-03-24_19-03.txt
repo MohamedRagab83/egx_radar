@@ -1,0 +1,173 @@
+========================================================================
+  EGX RADAR — HYBRID SYSTEM 6-YEAR VALIDATION
+  Generated: 2026-03-24 19:03:31
+========================================================================
+
+╔═══════════════════════════════════════════════════════════════╗
+║  PART 1: HYBRID SYSTEM CONFIGURATION                        ║
+╚═══════════════════════════════════════════════════════════════╝
+
+  SmartRank STRONG:     >= 70.0 (risk 0.50%)
+  SmartRank MEDIUM:     >= 45.0 (risk 0.25%)
+  Min SmartRank:        45.0
+  Max Open Trades:      3
+  Daily Top N:          2
+  Quality Gate:         5/10 soft checks (3 hard disqualifiers kept)
+  Regime:               BULL=all, NEUTRAL=STRONG only, BEAR=none
+  Max Stop Loss:        3.0%
+  Slippage:             0.5%
+  Fees:                 0.2%
+
+╔═══════════════════════════════════════════════════════════════╗
+║  PART 2: BEFORE vs AFTER COMPARISON                         ║
+╚═══════════════════════════════════════════════════════════════╝
+
+  Metric                          BEFORE        AFTER       Change
+  ─────────────────────────────────────────────────────────────────
+  Total Trades                         5            5           +0
+  Trades/Year                        0.8          0.8         +0.0
+  Win Rate %                       40.0%        40.0%        +0.0%
+  Total PnL %                     -0.34%       -0.34%       +0.00%
+  Profit Factor                     0.97         0.97        -0.00
+  Max Drawdown %                   0.57%        0.85%       +0.28%
+  Expectancy %/trade            -0.0680%     -0.0680%     +0.0000%
+  Avg Bars Held                      3.0          3.0         +0.0
+  Years with Trades                    3            3           +0
+
+╔═══════════════════════════════════════════════════════════════╗
+║  PART 3: CORE METRICS                                       ║
+╚═══════════════════════════════════════════════════════════════╝
+
+  Total Trades:         5
+  Trades/Year:          0.8
+  Missed Signals:       3
+  Win Rate:             40.0% (2W / 3L)
+  Total PnL:            -0.34%
+  Avg Return/Trade:     -0.07%
+  Avg Win:              +4.99%
+  Avg Loss:             -3.44%
+  Largest Win:          +6.53%
+  Largest Loss:         -3.44%
+  Profit Factor:        0.97
+  Expectancy:           -0.0680%/trade
+  Max Drawdown:         0.85%
+  Max Losing Streak:    2 trades
+  Avg Bars Held:        3.0
+
+╔═══════════════════════════════════════════════════════════════╗
+║  PART 4: STRONG vs MEDIUM PERFORMANCE                       ║
+╚═══════════════════════════════════════════════════════════════╝
+
+  STRONG (SR≥70):
+    Trades:       4
+    Win Rate:     50.0%
+    Total PnL:    +3.10%
+    Profit Factor:1.45
+    Max DD:       0.57%
+
+  MEDIUM (45≤SR<70):
+    Trades:       1
+    Win Rate:     0.0%
+    Total PnL:    -3.44%
+    Profit Factor:0.00
+    Max DD:       0.28%
+
+╔═══════════════════════════════════════════════════════════════╗
+║  PART 5: CONSISTENCY BY YEAR                                ║
+╚═══════════════════════════════════════════════════════════════╝
+
+  Year          Trades     WR%      PnL%     DD%      PF
+  ───────────────────────────────────────────────────────
+  2020               1    0.0%    -3.44%   0.57%    0.00
+  2021               0     ---       ---     ---     ---
+  2022               0     ---       ---     ---     ---
+  2023               1  100.0%    +3.45%   0.00%       ∞
+  2024               0     ---       ---     ---     ---
+  2025-26Q1          3   33.3%    -0.35%   0.85%    0.95
+
+╔═══════════════════════════════════════════════════════════════╗
+║  PART 6: RISK PROFILE                                       ║
+╚═══════════════════════════════════════════════════════════════╝
+
+  Symbol Distribution:
+    ESRS    : 1 trades, WR 0%, PnL -3.44%
+    AMOC    : 1 trades, WR 100%, PnL +3.45%
+    CIEB    : 1 trades, WR 0%, PnL -3.44%
+    ORWE    : 1 trades, WR 0%, PnL -3.44%
+    HRHO    : 1 trades, WR 100%, PnL +6.53%
+
+  Sector Distribution:
+    INDUSTRIAL          : 2 trades, PnL +0.01%
+    SERVICES            : 2 trades, PnL +3.09%
+    BANKS               : 1 trades, PnL -3.44%
+
+  Regime Distribution:
+    BULL        : 5 trades, WR 40%, PnL -0.34%
+
+  Partial TP Taken:     2/5 (40%)
+  Trailing Activated:   2/5 (40%)
+
+╔═══════════════════════════════════════════════════════════════╗
+║  PART 7: STABILITY ANALYSIS                                 ║
+╚═══════════════════════════════════════════════════════════════╝
+
+  Active Years:         3 / 6
+  Profitable Years:     1 / 3
+  Mean WR:              44.4%
+  WR Std Dev:           50.9%
+  WR CV:                1.15 (unstable)
+
+╔═══════════════════════════════════════════════════════════════╗
+║  FULL TRADE LOG                                             ║
+╚═══════════════════════════════════════════════════════════════╝
+
+    # Sym      Tier         Entry       Exit     PnL% Out     Bars    SR Period    
+  ─────────────────────────────────────────────────────────────────────────────────────
+    1 ESRS     STRONG  2020-12-01 2020-12-02   -3.44% LOSS       2    86 2020      
+    2 AMOC     STRONG  2023-11-30 2023-12-05   +3.45% WIN        4    86 2023      
+    3 CIEB     STRONG  2025-12-09 2025-12-11   -3.44% LOSS       3    74 2025-26Q1 
+    4 ORWE     MEDIUM  2025-12-29 2026-01-04   -3.44% LOSS       4    68 2025-26Q1 
+    5 HRHO     STRONG  2026-01-22 2026-01-25   +6.53% WIN        2    82 2025-26Q1 
+
+╔═══════════════════════════════════════════════════════════════╗
+║  MISSED TRADES SUMMARY                                      ║
+╚═══════════════════════════════════════════════════════════════╝
+
+  Total Missed: 3
+    trigger_not_touched      : 3 (sim WR 33%, avg PnL -1.36%)
+
+========================================================================
+
+╔═══════════════════════════════════════════════════════════════╗
+║  DECISION ENGINE — FINAL VERDICT                            ║
+╚═══════════════════════════════════════════════════════════════╝
+
+  [FAIL] Trades >= 30:        5 ✗
+  [FAIL] Win Rate >= 55%:     40.0% ✗
+  [PASS] Max DD < 5%:         0.85% ✓
+  [FAIL] Profit Factor > 1.2: 0.97 ✗
+  [FAIL] Expectancy > 0:     -0.0680% ✗
+
+========================================================================
+
+  ████████████████████████████████████████████████████████
+  ██                                                    ██
+  ██   VERDICT:  ✗ NOT READY FOR REAL MONEY            ██
+  ██                                                    ██
+  ██   ✗ Insufficient trades                             ██
+  ██   ✗ Low win rate                                    ██
+  ██   ✗ Low profit factor                               ██
+  ██   ✗ Negative expectancy                             ██
+  ██                                                    ██
+  ████████████████████████████████████████████████████████
+
+  IMPROVEMENT vs PREVIOUS SYSTEM:
+    Trade count:    5 → 5 (+0, +0%)
+    Win rate:       40.0% → 40.0% (+0.0%)
+    Total PnL:      -0.34% → -0.34% (+0.00%)
+    Profit Factor:  0.97 → 0.97
+    Max Drawdown:   0.57% → 0.85%
+    Expectancy:     -0.0680% → -0.0680%
+
+  هل النظام جاهز للسوق الحقيقي؟  لا ✗ — مش جاهز
+========================================================================

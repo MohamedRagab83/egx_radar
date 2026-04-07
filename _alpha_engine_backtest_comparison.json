@@ -1,0 +1,33 @@
+{
+  "date_from": "2024-01-01",
+  "date_to": "2024-12-31",
+  "baseline": {
+    "trade_count": 3,
+    "total_return_pct": -0.5,
+    "win_rate_pct": 33.3,
+    "max_drawdown_pct": 0.5,
+    "sharpe_ratio": -5.85,
+    "expectancy_pct": -2.8,
+    "alpha_trade_count": 0,
+    "alpha_expectancy_pct": 0.0,
+    "alpha_win_rate_pct": 0.0
+  },
+  "alpha_overlay": {
+    "trade_count": 6,
+    "total_return_pct": 0.69,
+    "win_rate_pct": 50.0,
+    "max_drawdown_pct": 0.54,
+    "sharpe_ratio": 0.53,
+    "expectancy_pct": 0.6,
+    "alpha_trade_count": 4,
+    "alpha_expectancy_pct": 3.23,
+    "alpha_win_rate_pct": 75.0
+  },
+  "validation": {
+    "expectancy_improves": true,
+    "drawdown_ok": true,
+    "no_overtrading": true,
+    "early_trades_show_edge": true,
+    "approved": true
+  }
+}

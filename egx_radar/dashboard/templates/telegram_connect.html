@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Connect Telegram</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f5f7fb; margin: 0; padding: 0; }
+        .container { max-width: 640px; margin: 60px auto; background: #fff; padding: 24px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+        h1 { margin-top: 0; color: #102542; }
+        .message { padding: 10px 12px; border-radius: 8px; margin-bottom: 12px; }
+        .message.error { background: #fde8e8; color: #8a1c1c; }
+        .message.success { background: #e8f7ec; color: #19663a; }
+        .code { background: #f0f4f9; padding: 10px 12px; border-radius: 8px; font-family: Consolas, monospace; word-break: break-all; }
+        .btn { display: inline-block; background: #102542; color: #fff; text-decoration: none; border: 0; border-radius: 8px; padding: 12px 16px; cursor: pointer; }
+        .helper { margin-top: 16px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Connect Telegram</h1>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="message {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% if not telegram_ready %}
+            <div class="message error">Telegram is not configured yet. Set TELEGRAM_BOT_TOKEN and TELEGRAM_BOT_USERNAME first.</div>
+        {% else %}
+            <p>1. Open your Telegram bot.</p>
+            <p>2. Send the bot a start message using this one-time link.</p>
+            <p>3. Come back here and press the confirm button.</p>
+
+            {% if connect_url %}
+                <p><a class="btn" href="{{ connect_url }}" target="_blank" rel="noopener">Open Telegram Bot</a></p>
+            {% endif %}
+
+            {% if bot_username %}
+                <p>Bot username: <strong>@{{ bot_username }}</strong></p>
+            {% endif %}
+
+            <p>Your connection token:</p>
+            <div class="code">{{ token }}</div>
+
+            <form method="post" class="helper">
+                <button class="btn" type="submit">I Sent /start, Check Connection</button>
+            </form>
+        {% endif %}
+
+        <p class="helper"><a href="{{ url_for('dashboard.user_dashboard') }}">Back to dashboard</a></p>
+    </div>
+</body>
+</html>

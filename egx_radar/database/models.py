@@ -1,15 +1,18 @@
 """SQLAlchemy ORM models for EGX Radar database."""
 
+import hashlib
 from datetime import datetime
 from decimal import Decimal
 from typing import Optional, List
 
+from flask_login import UserMixin
 from sqlalchemy import (
     Column, Integer, String, Float, DateTime, Boolean, 
     ForeignKey, Numeric, Text, JSON, Index, UniqueConstraint
 )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
+from werkzeug.security import check_password_hash, generate_password_hash
 
 Base = declarative_base()
 
@@ -78,42 +81,52 @@ class BacktestResult(Base):
 
 
 class Trade(Base):
-    """Individual trades from backtest execution or live signals."""
+    """Individual trades from backtest execution or live signals.
     
+    DATA INTEGRITY (Phase 2):
+      - trade_uid: Deterministic SHA256-based unique identifier
+      - Prevents duplicate trades and ensures accurate outcome attribution
+    """
+
     __tablename__ = 'trades'
     __table_args__ = (
         Index('idx_trade_backtest', 'backtest_id'),
         Index('idx_trade_symbol', 'symbol'),
         Index('idx_trade_entry_date', 'entry_date'),
         Index('idx_trade_result', 'result'),
+        Index('idx_trade_uid', 'trade_uid'),
+        UniqueConstraint('trade_uid', name='uq_trade_uid'),  # Enforce uniqueness
     )
-    
+
     id = Column(Integer, primary_key=True)
     backtest_id = Column(Integer, ForeignKey('backtest_results.id'), nullable=True)
     
+    # PHASE 2: Deterministic trade identifier (SHA256-based)
+    trade_uid = Column(String(16), nullable=True, index=True)  # 16 hex chars from SHA256
+
     symbol = Column(String(20), nullable=False)
     entry_date = Column(DateTime, nullable=False)
     entry_price = Column(Numeric(15, 6), nullable=False)
     entry_signal = Column(String(50), nullable=False)  # buy, sell, short
-    
+
     exit_date = Column(DateTime, nullable=True)
     exit_price = Column(Numeric(15, 6), nullable=True)
     exit_reason = Column(String(100), nullable=True)  # take_profit, stop_loss, signal, timeout
-    
+
     quantity = Column(Integer, nullable=False)
     result = Column(String(20), nullable=True)  # win, loss, breakeven
     pnl = Column(Numeric(15, 2), nullable=True)
     pnl_pct = Column(Float, nullable=True)
-    
+
     max_profit = Column(Numeric(15, 2), nullable=True)  # Highest unrealized profit
     max_loss = Column(Numeric(15, 2), nullable=True)    # Lowest unrealized profit
-    
+
     duration_minutes = Column(Integer, nullable=True)
-    
+
     backtest = relationship('BacktestResult', back_populates='trades')
-    
+
     created_at = Column(DateTime, default=datetime.utcnow)
-    
+
     def __repr__(self):
         return f"<Trade(symbol={self.symbol}, entry={self.entry_date.strftime('%Y-%m-%d')}, pnl={self.pnl})>"
 
@@ -236,3 +249,153 @@ class EquityHistory(Base):
     
     def __repr__(self):
         return f"<EquityHistory(date={self.date.strftime('%Y-%m-%d')}, equity={self.ending_equity})>"
+
+
+class User(UserMixin, Base):
+    """Basic SaaS user account."""
+
+    __tablename__ = 'users'
+    __table_args__ = (
+        Index('idx_user_email', 'email'),
+    )
+
+    id = Column(Integer, primary_key=True)
+    email = Column(String(255), unique=True, nullable=False, index=True)
+    password_hash = Column(String(255), nullable=False)
+    telegram_chat_id = Column(String(64), nullable=True, index=True)
+    telegram_connect_token = Column(String(128), nullable=True, index=True)
+    telegram_connected_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    subscriptions = relationship('Subscription', back_populates='user', cascade='all, delete-orphan')
+    telegram_alerts = relationship('TelegramAlertDelivery', back_populates='user', cascade='all, delete-orphan')
+
+    def set_password(self, password: str) -> None:
+        """Hash and store a user password."""
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password: str) -> bool:
+        """Validate password against either modern or legacy hashes."""
+        if not self.password_hash:
+            return False
+        try:
+            if check_password_hash(self.password_hash, password):
+                return True
+        except ValueError:
+            pass
+        legacy_hash = hashlib.sha256(password.encode("utf-8")).hexdigest()
+        return self.password_hash == legacy_hash
+
+    def __repr__(self):
+        return f"<User(email={self.email})>"
+
+
+class Plan(Base):
+    """Subscription plan for the SaaS platform."""
+
+    __tablename__ = 'plans'
+    __table_args__ = (
+        Index('idx_plan_name', 'name'),
+    )
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100), unique=True, nullable=False)
+    price = Column(Numeric(10, 2), nullable=False, default=0)
+
+    subscriptions = relationship('Subscription', back_populates='plan', cascade='all, delete-orphan')
+
+    def __repr__(self):
+        return f"<Plan(name={self.name}, price={self.price})>"
+
+
+class Subscription(Base):
+    """User subscription to a plan."""
+
+    __tablename__ = 'subscriptions'
+    __table_args__ = (
+        Index('idx_subscription_user', 'user_id'),
+        Index('idx_subscription_plan', 'plan_id'),
+        Index('idx_subscription_status', 'status'),
+    )
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    plan_id = Column(Integer, ForeignKey('plans.id'), nullable=False)
+    status = Column(String(50), nullable=False, default='active')
+    start_date = Column(DateTime, default=datetime.utcnow, nullable=False)
+    end_date = Column(DateTime, nullable=True)
+
+    user = relationship('User', back_populates='subscriptions')
+    plan = relationship('Plan', back_populates='subscriptions')
+
+    def __repr__(self):
+        return f"<Subscription(user_id={self.user_id}, plan_id={self.plan_id}, status={self.status})>"
+
+
+class ScanRun(Base):
+    """A single central market scan run."""
+
+    __tablename__ = 'scan_runs'
+    __table_args__ = (
+        Index('idx_scan_run_timestamp', 'timestamp'),
+    )
+
+    id = Column(Integer, primary_key=True)
+    timestamp = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+
+    signals = relationship('ScanSignal', back_populates='scan_run', cascade='all, delete-orphan')
+
+    def __repr__(self):
+        return f"<ScanRun(id={self.id}, timestamp={self.timestamp})>"
+
+
+class ScanSignal(Base):
+    """Normalized scanner output stored for dashboard/API use."""
+
+    __tablename__ = 'scan_signals'
+    __table_args__ = (
+        Index('idx_scan_signal_run', 'scan_run_id'),
+        Index('idx_scan_signal_symbol', 'symbol'),
+        Index('idx_scan_signal_rank', 'smart_rank'),
+        Index('idx_scan_signal_type', 'trade_type'),
+    )
+
+    id = Column(Integer, primary_key=True)
+    scan_run_id = Column(Integer, ForeignKey('scan_runs.id'), nullable=False)
+    symbol = Column(String(20), nullable=False)
+    smart_rank = Column(Float, nullable=False, default=0.0)
+    trade_type = Column(String(50), nullable=True)
+    entry = Column(Numeric(15, 6), nullable=True)
+    stop = Column(Numeric(15, 6), nullable=True)
+    target = Column(Numeric(15, 6), nullable=True)
+
+    scan_run = relationship('ScanRun', back_populates='signals')
+
+    def __repr__(self):
+        return f"<ScanSignal(symbol={self.symbol}, smart_rank={self.smart_rank}, trade_type={self.trade_type})>"
+
+
+class TelegramAlertDelivery(Base):
+    """Tracks Telegram alerts already sent to avoid duplicates."""
+
+    __tablename__ = 'telegram_alert_deliveries'
+    __table_args__ = (
+        Index('idx_telegram_alert_user', 'user_id'),
+        Index('idx_telegram_alert_symbol', 'symbol'),
+        Index('idx_telegram_alert_day', 'alert_day'),
+        UniqueConstraint('user_id', 'symbol', 'alert_day', name='uq_telegram_alert_user_symbol_day'),
+    )
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    symbol = Column(String(20), nullable=False)
+    alert_day = Column(String(10), nullable=False)
+    trade_type = Column(String(50), nullable=True)
+    action = Column(String(50), nullable=True)
+    smart_rank = Column(Float, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    user = relationship('User', back_populates='telegram_alerts')
+
+    def __repr__(self):
+        return f"<TelegramAlertDelivery(user_id={self.user_id}, symbol={self.symbol}, alert_day={self.alert_day})>"

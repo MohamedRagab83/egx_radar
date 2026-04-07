@@ -1,0 +1,3055 @@
+{
+  "params": {
+    "date_from": "2024-01-01",
+    "date_to": "2025-12-31",
+    "max_bars": 20,
+    "max_concurrent_trades": 3,
+    "entry_mode": "touch",
+    "execution": "next_candle_touch_stop_first_partial_tp_trailing",
+    "slippage_pct": 0.005,
+    "fees_pct": 0.002
+  },
+  "overall": {
+    "total_trades": 25,
+    "win_rate_pct": 56.0,
+    "avg_return_pct": 0.48,
+    "expectancy_pct": 0.48,
+    "avg_rr": 0.26,
+    "total_return_pct": 0.6,
+    "max_drawdown_pct": 1.62,
+    "sharpe_ratio": 0.0,
+    "profit_factor": 1.19,
+    "avg_bars_in_trade": 10.1,
+    "largest_win_pct": 8.03,
+    "largest_loss_pct": -12.42
+  },
+  "monthly": [
+    {
+      "month": "2024-12",
+      "trade_count": 3,
+      "return_pct": -13.82,
+      "win_rate_pct": 0.0
+    },
+    {
+      "month": "2025-01",
+      "trade_count": 2,
+      "return_pct": -0.39,
+      "win_rate_pct": 50.0
+    },
+    {
+      "month": "2025-02",
+      "trade_count": 1,
+      "return_pct": 5.88,
+      "win_rate_pct": 100.0
+    },
+    {
+      "month": "2025-03",
+      "trade_count": 4,
+      "return_pct": 7.07,
+      "win_rate_pct": 75.0
+    },
+    {
+      "month": "2025-05",
+      "trade_count": 1,
+      "return_pct": -5.44,
+      "win_rate_pct": 0.0
+    },
+    {
+      "month": "2025-07",
+      "trade_count": 2,
+      "return_pct": -4.39,
+      "win_rate_pct": 50.0
+    },
+    {
+      "month": "2025-08",
+      "trade_count": 3,
+      "return_pct": 6.1,
+      "win_rate_pct": 66.7
+    },
+    {
+      "month": "2025-11",
+      "trade_count": 3,
+      "return_pct": 8.05,
+      "win_rate_pct": 66.7
+    },
+    {
+      "month": "2025-12",
+      "trade_count": 6,
+      "return_pct": 9.01,
+      "win_rate_pct": 66.7
+    }
+  ],
+  "per_sector": {
+    "BANKS": {
+      "win_rate_pct": 70.0,
+      "total_trades": 10,
+      "avg_return_pct": 2.64
+    },
+    "SERVICES": {
+      "win_rate_pct": 20.0,
+      "total_trades": 5,
+      "avg_return_pct": -3.17
+    },
+    "ENERGY": {
+      "win_rate_pct": 60.0,
+      "total_trades": 10,
+      "avg_return_pct": 0.15
+    }
+  },
+  "per_trade_type": {
+    "STRONG": {
+      "win_rate_pct": 50.0,
+      "avg_return_pct": -0.2,
+      "avg_rr": 0.01,
+      "avg_risk_used_pct": 0.31,
+      "total_trades": 22
+    },
+    "MEDIUM": {
+      "win_rate_pct": 100.0,
+      "avg_return_pct": 5.49,
+      "avg_rr": 2.03,
+      "avg_risk_used_pct": 0.2,
+      "total_trades": 3
+    }
+  },
+  "equity_curve": [
+    {
+      "date": "2024-01-02",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-01-02",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-01-03",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-01-04",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-01-08",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-01-09",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-01-10",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-01-11",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-01-14",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-01-15",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-01-16",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-01-17",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-01-18",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-01-21",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-01-22",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-01-23",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-01-24",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-01-28",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-01-29",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-01-30",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-01-31",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-02-01",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-02-04",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-02-05",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-02-06",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-02-07",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-02-08",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-02-11",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-02-12",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-02-13",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-02-14",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-02-15",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-02-18",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-02-19",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-02-20",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-02-21",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-02-22",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-02-25",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-02-26",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-02-27",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-02-28",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-02-29",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-03-03",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-03-04",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-03-05",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-03-06",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-03-07",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-03-10",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-03-11",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-03-12",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-03-13",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-03-14",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-03-17",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-03-18",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-03-19",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-03-20",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-03-21",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-03-24",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-03-25",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-03-26",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-03-27",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-03-28",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-03-31",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-04-01",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-04-02",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-04-03",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-04-04",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-04-07",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-04-08",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-04-15",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-04-16",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-04-17",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-04-18",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-04-21",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-04-22",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-04-23",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-04-24",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-04-28",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-04-29",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-04-30",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-05-01",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-05-02",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-05-07",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-05-08",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-05-09",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-05-12",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-05-13",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-05-14",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-05-15",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-05-16",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-05-19",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-05-20",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-05-21",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-05-22",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-05-23",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-05-26",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-05-27",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-05-28",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-05-29",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-05-30",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-06-02",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-06-03",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-06-04",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-06-05",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-06-06",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-06-09",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-06-10",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-06-11",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-06-12",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-06-13",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-06-23",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-06-24",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-06-25",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-06-26",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-06-27",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-07-01",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-07-02",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-07-03",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-07-04",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-07-07",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-07-08",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-07-09",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-07-10",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-07-14",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-07-15",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-07-16",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-07-17",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-07-18",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-07-21",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-07-22",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-07-23",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-07-24",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-07-28",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-07-29",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-07-30",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-07-31",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-08-01",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-08-04",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-08-05",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-08-06",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-08-07",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-08-08",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-08-11",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-08-12",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-08-13",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-08-14",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-08-15",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-08-18",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-08-19",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-08-20",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-08-21",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-08-22",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-08-25",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-08-26",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-08-27",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-08-28",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-08-29",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-09-01",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-09-02",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-09-03",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-09-04",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-09-05",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-09-08",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-09-09",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-09-10",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-09-11",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-09-12",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-09-16",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-09-17",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-09-18",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-09-19",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-09-22",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-09-23",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-09-24",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-09-25",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-09-26",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-09-29",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-09-30",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-10-01",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-10-02",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-10-03",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-10-07",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-10-08",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-10-09",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-10-10",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-10-13",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-10-14",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-10-15",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-10-16",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-10-17",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-10-20",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-10-21",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-10-22",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-10-23",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-10-24",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-10-27",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-10-28",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-10-29",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-10-30",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-10-31",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-11-03",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-11-04",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-11-05",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-11-06",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-11-07",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-11-10",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-11-11",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-11-12",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-11-13",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-11-14",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-11-17",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-11-18",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-11-19",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-11-20",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-11-21",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-11-24",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-11-25",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-11-26",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-11-27",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-11-28",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-12-01",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-12-02",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-12-03",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-12-04",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-12-05",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-12-08",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-12-09",
+      "equity_pct": 0.0
+    },
+    {
+      "date": "2024-12-10",
+      "equity_pct": -0.27
+    },
+    {
+      "date": "2024-12-11",
+      "equity_pct": -0.27
+    },
+    {
+      "date": "2024-12-12",
+      "equity_pct": -0.27
+    },
+    {
+      "date": "2024-12-15",
+      "equity_pct": -0.27
+    },
+    {
+      "date": "2024-12-16",
+      "equity_pct": -0.27
+    },
+    {
+      "date": "2024-12-17",
+      "equity_pct": -0.27
+    },
+    {
+      "date": "2024-12-18",
+      "equity_pct": -0.27
+    },
+    {
+      "date": "2024-12-19",
+      "equity_pct": -0.54
+    },
+    {
+      "date": "2024-12-22",
+      "equity_pct": -0.54
+    },
+    {
+      "date": "2024-12-23",
+      "equity_pct": -0.54
+    },
+    {
+      "date": "2024-12-24",
+      "equity_pct": -0.54
+    },
+    {
+      "date": "2024-12-25",
+      "equity_pct": -0.54
+    },
+    {
+      "date": "2024-12-26",
+      "equity_pct": -0.54
+    },
+    {
+      "date": "2024-12-29",
+      "equity_pct": -0.81
+    },
+    {
+      "date": "2024-12-30",
+      "equity_pct": -0.81
+    },
+    {
+      "date": "2024-12-31",
+      "equity_pct": -0.81
+    },
+    {
+      "date": "2025-01-02",
+      "equity_pct": -0.81
+    },
+    {
+      "date": "2025-01-05",
+      "equity_pct": -0.81
+    },
+    {
+      "date": "2025-01-06",
+      "equity_pct": -0.81
+    },
+    {
+      "date": "2025-01-08",
+      "equity_pct": -0.81
+    },
+    {
+      "date": "2025-01-09",
+      "equity_pct": -0.81
+    },
+    {
+      "date": "2025-01-12",
+      "equity_pct": -0.81
+    },
+    {
+      "date": "2025-01-13",
+      "equity_pct": -0.81
+    },
+    {
+      "date": "2025-01-14",
+      "equity_pct": -0.81
+    },
+    {
+      "date": "2025-01-15",
+      "equity_pct": -0.81
+    },
+    {
+      "date": "2025-01-16",
+      "equity_pct": -0.81
+    },
+    {
+      "date": "2025-01-19",
+      "equity_pct": -0.81
+    },
+    {
+      "date": "2025-01-20",
+      "equity_pct": -0.81
+    },
+    {
+      "date": "2025-01-21",
+      "equity_pct": -0.81
+    },
+    {
+      "date": "2025-01-22",
+      "equity_pct": -0.81
+    },
+    {
+      "date": "2025-01-23",
+      "equity_pct": -0.81
+    },
+    {
+      "date": "2025-01-26",
+      "equity_pct": -0.81
+    },
+    {
+      "date": "2025-01-27",
+      "equity_pct": -0.81
+    },
+    {
+      "date": "2025-01-28",
+      "equity_pct": -1.07
+    },
+    {
+      "date": "2025-01-29",
+      "equity_pct": -0.82
+    },
+    {
+      "date": "2025-01-30",
+      "equity_pct": -0.82
+    },
+    {
+      "date": "2025-02-02",
+      "equity_pct": -0.82
+    },
+    {
+      "date": "2025-02-03",
+      "equity_pct": -0.82
+    },
+    {
+      "date": "2025-02-04",
+      "equity_pct": -0.82
+    },
+    {
+      "date": "2025-02-05",
+      "equity_pct": -0.82
+    },
+    {
+      "date": "2025-02-06",
+      "equity_pct": -0.82
+    },
+    {
+      "date": "2025-02-09",
+      "equity_pct": -0.82
+    },
+    {
+      "date": "2025-02-10",
+      "equity_pct": -0.82
+    },
+    {
+      "date": "2025-02-11",
+      "equity_pct": -0.82
+    },
+    {
+      "date": "2025-02-12",
+      "equity_pct": -0.82
+    },
+    {
+      "date": "2025-02-13",
+      "equity_pct": -0.82
+    },
+    {
+      "date": "2025-02-16",
+      "equity_pct": -0.82
+    },
+    {
+      "date": "2025-02-17",
+      "equity_pct": -0.82
+    },
+    {
+      "date": "2025-02-18",
+      "equity_pct": -0.82
+    },
+    {
+      "date": "2025-02-19",
+      "equity_pct": -0.82
+    },
+    {
+      "date": "2025-02-20",
+      "equity_pct": -0.82
+    },
+    {
+      "date": "2025-02-23",
+      "equity_pct": -0.82
+    },
+    {
+      "date": "2025-02-24",
+      "equity_pct": -0.82
+    },
+    {
+      "date": "2025-02-25",
+      "equity_pct": -0.82
+    },
+    {
+      "date": "2025-02-26",
+      "equity_pct": -0.82
+    },
+    {
+      "date": "2025-02-27",
+      "equity_pct": -0.53
+    },
+    {
+      "date": "2025-03-02",
+      "equity_pct": -0.53
+    },
+    {
+      "date": "2025-03-03",
+      "equity_pct": -0.53
+    },
+    {
+      "date": "2025-03-04",
+      "equity_pct": -0.53
+    },
+    {
+      "date": "2025-03-05",
+      "equity_pct": -0.29
+    },
+    {
+      "date": "2025-03-06",
+      "equity_pct": -0.29
+    },
+    {
+      "date": "2025-03-09",
+      "equity_pct": -0.29
+    },
+    {
+      "date": "2025-03-10",
+      "equity_pct": -0.29
+    },
+    {
+      "date": "2025-03-11",
+      "equity_pct": -0.29
+    },
+    {
+      "date": "2025-03-12",
+      "equity_pct": -0.29
+    },
+    {
+      "date": "2025-03-13",
+      "equity_pct": -0.29
+    },
+    {
+      "date": "2025-03-16",
+      "equity_pct": -0.55
+    },
+    {
+      "date": "2025-03-17",
+      "equity_pct": -0.55
+    },
+    {
+      "date": "2025-03-18",
+      "equity_pct": -0.55
+    },
+    {
+      "date": "2025-03-19",
+      "equity_pct": -0.55
+    },
+    {
+      "date": "2025-03-20",
+      "equity_pct": -0.55
+    },
+    {
+      "date": "2025-03-23",
+      "equity_pct": -0.55
+    },
+    {
+      "date": "2025-03-24",
+      "equity_pct": -0.38
+    },
+    {
+      "date": "2025-03-25",
+      "equity_pct": -0.13
+    },
+    {
+      "date": "2025-03-26",
+      "equity_pct": -0.13
+    },
+    {
+      "date": "2025-03-27",
+      "equity_pct": -0.13
+    },
+    {
+      "date": "2025-04-03",
+      "equity_pct": -0.13
+    },
+    {
+      "date": "2025-04-06",
+      "equity_pct": -0.13
+    },
+    {
+      "date": "2025-04-07",
+      "equity_pct": -0.13
+    },
+    {
+      "date": "2025-04-08",
+      "equity_pct": -0.13
+    },
+    {
+      "date": "2025-04-09",
+      "equity_pct": -0.13
+    },
+    {
+      "date": "2025-04-10",
+      "equity_pct": -0.13
+    },
+    {
+      "date": "2025-04-13",
+      "equity_pct": -0.13
+    },
+    {
+      "date": "2025-04-14",
+      "equity_pct": -0.13
+    },
+    {
+      "date": "2025-04-15",
+      "equity_pct": -0.13
+    },
+    {
+      "date": "2025-04-16",
+      "equity_pct": -0.13
+    },
+    {
+      "date": "2025-04-17",
+      "equity_pct": -0.13
+    },
+    {
+      "date": "2025-04-22",
+      "equity_pct": -0.13
+    },
+    {
+      "date": "2025-04-23",
+      "equity_pct": -0.13
+    },
+    {
+      "date": "2025-04-27",
+      "equity_pct": -0.13
+    },
+    {
+      "date": "2025-04-28",
+      "equity_pct": -0.13
+    },
+    {
+      "date": "2025-04-29",
+      "equity_pct": -0.13
+    },
+    {
+      "date": "2025-04-30",
+      "equity_pct": -0.13
+    },
+    {
+      "date": "2025-05-04",
+      "equity_pct": -0.13
+    },
+    {
+      "date": "2025-05-05",
+      "equity_pct": -0.13
+    },
+    {
+      "date": "2025-05-06",
+      "equity_pct": -0.13
+    },
+    {
+      "date": "2025-05-07",
+      "equity_pct": -0.13
+    },
+    {
+      "date": "2025-05-08",
+      "equity_pct": -0.13
+    },
+    {
+      "date": "2025-05-11",
+      "equity_pct": -0.13
+    },
+    {
+      "date": "2025-05-12",
+      "equity_pct": -0.13
+    },
+    {
+      "date": "2025-05-13",
+      "equity_pct": -0.13
+    },
+    {
+      "date": "2025-05-14",
+      "equity_pct": -0.13
+    },
+    {
+      "date": "2025-05-15",
+      "equity_pct": -0.13
+    },
+    {
+      "date": "2025-05-18",
+      "equity_pct": -0.13
+    },
+    {
+      "date": "2025-05-19",
+      "equity_pct": -0.13
+    },
+    {
+      "date": "2025-05-20",
+      "equity_pct": -0.39
+    },
+    {
+      "date": "2025-05-21",
+      "equity_pct": -0.39
+    },
+    {
+      "date": "2025-05-22",
+      "equity_pct": -0.39
+    },
+    {
+      "date": "2025-05-25",
+      "equity_pct": -0.39
+    },
+    {
+      "date": "2025-05-26",
+      "equity_pct": -0.39
+    },
+    {
+      "date": "2025-05-27",
+      "equity_pct": -0.39
+    },
+    {
+      "date": "2025-05-28",
+      "equity_pct": -0.39
+    },
+    {
+      "date": "2025-05-29",
+      "equity_pct": -0.39
+    },
+    {
+      "date": "2025-06-01",
+      "equity_pct": -0.39
+    },
+    {
+      "date": "2025-06-02",
+      "equity_pct": -0.39
+    },
+    {
+      "date": "2025-06-03",
+      "equity_pct": -0.39
+    },
+    {
+      "date": "2025-06-04",
+      "equity_pct": -0.39
+    },
+    {
+      "date": "2025-06-10",
+      "equity_pct": -0.39
+    },
+    {
+      "date": "2025-06-11",
+      "equity_pct": -0.39
+    },
+    {
+      "date": "2025-06-12",
+      "equity_pct": -0.39
+    },
+    {
+      "date": "2025-06-15",
+      "equity_pct": -0.39
+    },
+    {
+      "date": "2025-06-16",
+      "equity_pct": -0.39
+    },
+    {
+      "date": "2025-06-17",
+      "equity_pct": -0.39
+    },
+    {
+      "date": "2025-06-18",
+      "equity_pct": -0.39
+    },
+    {
+      "date": "2025-06-19",
+      "equity_pct": -0.39
+    },
+    {
+      "date": "2025-06-22",
+      "equity_pct": -0.39
+    },
+    {
+      "date": "2025-06-23",
+      "equity_pct": -0.39
+    },
+    {
+      "date": "2025-06-24",
+      "equity_pct": -0.39
+    },
+    {
+      "date": "2025-06-25",
+      "equity_pct": -0.39
+    },
+    {
+      "date": "2025-06-29",
+      "equity_pct": -0.39
+    },
+    {
+      "date": "2025-06-30",
+      "equity_pct": -0.39
+    },
+    {
+      "date": "2025-07-01",
+      "equity_pct": -0.39
+    },
+    {
+      "date": "2025-07-02",
+      "equity_pct": -0.39
+    },
+    {
+      "date": "2025-07-06",
+      "equity_pct": -0.39
+    },
+    {
+      "date": "2025-07-07",
+      "equity_pct": -0.39
+    },
+    {
+      "date": "2025-07-09",
+      "equity_pct": -0.39
+    },
+    {
+      "date": "2025-07-10",
+      "equity_pct": -0.39
+    },
+    {
+      "date": "2025-07-13",
+      "equity_pct": -0.39
+    },
+    {
+      "date": "2025-07-14",
+      "equity_pct": -1.62
+    },
+    {
+      "date": "2025-07-15",
+      "equity_pct": -1.62
+    },
+    {
+      "date": "2025-07-16",
+      "equity_pct": -1.62
+    },
+    {
+      "date": "2025-07-17",
+      "equity_pct": -1.62
+    },
+    {
+      "date": "2025-07-20",
+      "equity_pct": -1.62
+    },
+    {
+      "date": "2025-07-21",
+      "equity_pct": -1.62
+    },
+    {
+      "date": "2025-07-22",
+      "equity_pct": -1.62
+    },
+    {
+      "date": "2025-07-23",
+      "equity_pct": -1.62
+    },
+    {
+      "date": "2025-07-27",
+      "equity_pct": -1.08
+    },
+    {
+      "date": "2025-07-28",
+      "equity_pct": -1.08
+    },
+    {
+      "date": "2025-07-29",
+      "equity_pct": -1.08
+    },
+    {
+      "date": "2025-07-30",
+      "equity_pct": -1.08
+    },
+    {
+      "date": "2025-07-31",
+      "equity_pct": -1.08
+    },
+    {
+      "date": "2025-08-03",
+      "equity_pct": -1.08
+    },
+    {
+      "date": "2025-08-04",
+      "equity_pct": -1.08
+    },
+    {
+      "date": "2025-08-05",
+      "equity_pct": -1.08
+    },
+    {
+      "date": "2025-08-06",
+      "equity_pct": -1.08
+    },
+    {
+      "date": "2025-08-07",
+      "equity_pct": -1.08
+    },
+    {
+      "date": "2025-08-10",
+      "equity_pct": -0.81
+    },
+    {
+      "date": "2025-08-11",
+      "equity_pct": -0.81
+    },
+    {
+      "date": "2025-08-12",
+      "equity_pct": -0.42
+    },
+    {
+      "date": "2025-08-13",
+      "equity_pct": -0.42
+    },
+    {
+      "date": "2025-08-14",
+      "equity_pct": -0.42
+    },
+    {
+      "date": "2025-08-17",
+      "equity_pct": -0.42
+    },
+    {
+      "date": "2025-08-18",
+      "equity_pct": -0.42
+    },
+    {
+      "date": "2025-08-19",
+      "equity_pct": -0.42
+    },
+    {
+      "date": "2025-08-20",
+      "equity_pct": -0.42
+    },
+    {
+      "date": "2025-08-21",
+      "equity_pct": -0.42
+    },
+    {
+      "date": "2025-08-24",
+      "equity_pct": -0.42
+    },
+    {
+      "date": "2025-08-25",
+      "equity_pct": -0.42
+    },
+    {
+      "date": "2025-08-26",
+      "equity_pct": -0.42
+    },
+    {
+      "date": "2025-08-27",
+      "equity_pct": -0.69
+    },
+    {
+      "date": "2025-08-28",
+      "equity_pct": -0.69
+    },
+    {
+      "date": "2025-08-31",
+      "equity_pct": -0.69
+    },
+    {
+      "date": "2025-09-01",
+      "equity_pct": -0.69
+    },
+    {
+      "date": "2025-09-02",
+      "equity_pct": -0.69
+    },
+    {
+      "date": "2025-09-03",
+      "equity_pct": -0.69
+    },
+    {
+      "date": "2025-09-07",
+      "equity_pct": -0.69
+    },
+    {
+      "date": "2025-09-08",
+      "equity_pct": -0.69
+    },
+    {
+      "date": "2025-09-09",
+      "equity_pct": -0.69
+    },
+    {
+      "date": "2025-09-10",
+      "equity_pct": -0.69
+    },
+    {
+      "date": "2025-09-11",
+      "equity_pct": -0.69
+    },
+    {
+      "date": "2025-09-14",
+      "equity_pct": -0.69
+    },
+    {
+      "date": "2025-09-15",
+      "equity_pct": -0.69
+    },
+    {
+      "date": "2025-09-16",
+      "equity_pct": -0.69
+    },
+    {
+      "date": "2025-09-17",
+      "equity_pct": -0.69
+    },
+    {
+      "date": "2025-09-18",
+      "equity_pct": -0.69
+    },
+    {
+      "date": "2025-09-21",
+      "equity_pct": -0.69
+    },
+    {
+      "date": "2025-09-22",
+      "equity_pct": -0.69
+    },
+    {
+      "date": "2025-09-23",
+      "equity_pct": -0.69
+    },
+    {
+      "date": "2025-09-24",
+      "equity_pct": -0.69
+    },
+    {
+      "date": "2025-09-25",
+      "equity_pct": -0.69
+    },
+    {
+      "date": "2025-09-28",
+      "equity_pct": -0.69
+    },
+    {
+      "date": "2025-09-29",
+      "equity_pct": -0.69
+    },
+    {
+      "date": "2025-09-30",
+      "equity_pct": -0.69
+    },
+    {
+      "date": "2025-10-01",
+      "equity_pct": -0.69
+    },
+    {
+      "date": "2025-10-02",
+      "equity_pct": -0.69
+    },
+    {
+      "date": "2025-10-05",
+      "equity_pct": -0.69
+    },
+    {
+      "date": "2025-10-06",
+      "equity_pct": -0.69
+    },
+    {
+      "date": "2025-10-07",
+      "equity_pct": -0.69
+    },
+    {
+      "date": "2025-10-08",
+      "equity_pct": -0.69
+    },
+    {
+      "date": "2025-10-12",
+      "equity_pct": -0.69
+    },
+    {
+      "date": "2025-10-13",
+      "equity_pct": -0.69
+    },
+    {
+      "date": "2025-10-14",
+      "equity_pct": -0.69
+    },
+    {
+      "date": "2025-10-15",
+      "equity_pct": -0.69
+    },
+    {
+      "date": "2025-10-16",
+      "equity_pct": -0.69
+    },
+    {
+      "date": "2025-10-19",
+      "equity_pct": -0.69
+    },
+    {
+      "date": "2025-10-20",
+      "equity_pct": -0.69
+    },
+    {
+      "date": "2025-10-21",
+      "equity_pct": -0.69
+    },
+    {
+      "date": "2025-10-22",
+      "equity_pct": -0.69
+    },
+    {
+      "date": "2025-10-23",
+      "equity_pct": -0.69
+    },
+    {
+      "date": "2025-10-26",
+      "equity_pct": -0.69
+    },
+    {
+      "date": "2025-10-27",
+      "equity_pct": -0.69
+    },
+    {
+      "date": "2025-10-28",
+      "equity_pct": -0.69
+    },
+    {
+      "date": "2025-10-29",
+      "equity_pct": -0.69
+    },
+    {
+      "date": "2025-10-30",
+      "equity_pct": -0.69
+    },
+    {
+      "date": "2025-11-02",
+      "equity_pct": -0.21
+    },
+    {
+      "date": "2025-11-03",
+      "equity_pct": -0.21
+    },
+    {
+      "date": "2025-11-04",
+      "equity_pct": -0.21
+    },
+    {
+      "date": "2025-11-05",
+      "equity_pct": -0.21
+    },
+    {
+      "date": "2025-11-06",
+      "equity_pct": -0.21
+    },
+    {
+      "date": "2025-11-09",
+      "equity_pct": -0.21
+    },
+    {
+      "date": "2025-11-10",
+      "equity_pct": -0.21
+    },
+    {
+      "date": "2025-11-11",
+      "equity_pct": -0.21
+    },
+    {
+      "date": "2025-11-12",
+      "equity_pct": -0.21
+    },
+    {
+      "date": "2025-11-13",
+      "equity_pct": -0.21
+    },
+    {
+      "date": "2025-11-16",
+      "equity_pct": -0.21
+    },
+    {
+      "date": "2025-11-17",
+      "equity_pct": -0.21
+    },
+    {
+      "date": "2025-11-18",
+      "equity_pct": -0.21
+    },
+    {
+      "date": "2025-11-19",
+      "equity_pct": -0.21
+    },
+    {
+      "date": "2025-11-20",
+      "equity_pct": -0.21
+    },
+    {
+      "date": "2025-11-23",
+      "equity_pct": 0.06
+    },
+    {
+      "date": "2025-11-24",
+      "equity_pct": 0.06
+    },
+    {
+      "date": "2025-11-25",
+      "equity_pct": 0.06
+    },
+    {
+      "date": "2025-11-26",
+      "equity_pct": 0.06
+    },
+    {
+      "date": "2025-11-27",
+      "equity_pct": 0.06
+    },
+    {
+      "date": "2025-11-30",
+      "equity_pct": 0.06
+    },
+    {
+      "date": "2025-12-01",
+      "equity_pct": 0.06
+    },
+    {
+      "date": "2025-12-02",
+      "equity_pct": 0.06
+    },
+    {
+      "date": "2025-12-03",
+      "equity_pct": 0.06
+    },
+    {
+      "date": "2025-12-04",
+      "equity_pct": 0.06
+    },
+    {
+      "date": "2025-12-07",
+      "equity_pct": 0.65
+    },
+    {
+      "date": "2025-12-08",
+      "equity_pct": 0.65
+    },
+    {
+      "date": "2025-12-09",
+      "equity_pct": 0.65
+    },
+    {
+      "date": "2025-12-10",
+      "equity_pct": 0.65
+    },
+    {
+      "date": "2025-12-11",
+      "equity_pct": 0.1
+    },
+    {
+      "date": "2025-12-14",
+      "equity_pct": 0.1
+    },
+    {
+      "date": "2025-12-15",
+      "equity_pct": 0.3
+    },
+    {
+      "date": "2025-12-16",
+      "equity_pct": 0.3
+    },
+    {
+      "date": "2025-12-17",
+      "equity_pct": 0.3
+    },
+    {
+      "date": "2025-12-18",
+      "equity_pct": 0.05
+    },
+    {
+      "date": "2025-12-21",
+      "equity_pct": 0.05
+    },
+    {
+      "date": "2025-12-22",
+      "equity_pct": 0.05
+    },
+    {
+      "date": "2025-12-23",
+      "equity_pct": 0.05
+    },
+    {
+      "date": "2025-12-24",
+      "equity_pct": 0.05
+    },
+    {
+      "date": "2025-12-25",
+      "equity_pct": 0.05
+    },
+    {
+      "date": "2025-12-28",
+      "equity_pct": 0.05
+    },
+    {
+      "date": "2025-12-29",
+      "equity_pct": 0.05
+    },
+    {
+      "date": "2025-12-30",
+      "equity_pct": 0.6
+    }
+  ],
+  "trades": [
+    {
+      "sym": "ADIB",
+      "sector": "BANKS",
+      "signal_type": "buy",
+      "regime": "WEAK",
+      "signal_date": "2024-12-03",
+      "entry_date": "2024-12-04",
+      "entry": 43.729,
+      "initial_stop": 42.207,
+      "stop": 42.207,
+      "target": 48.102,
+      "partial_target": 46.79,
+      "trailing_trigger": 45.915,
+      "trailing_stop_pct": 0.03,
+      "bars_held": 5,
+      "status": "OPEN",
+      "smart_rank": 75.69,
+      "score": 75.69,
+      "trade_type": "STRONG",
+      "risk_used": 0.0025,
+      "anticipation": 0.682,
+      "atr": 0.6121,
+      "size": 16,
+      "partial_taken": false,
+      "partial_exit_price": null,
+      "remaining_fraction": 1.0,
+      "trailing_active": false,
+      "trailing_anchor": 43.729,
+      "trigger_price": 43.62,
+      "fill_mode": "next_candle_touch",
+      "exit_date": "2024-12-10",
+      "exit": 42.101,
+      "pnl_pct": -3.92,
+      "gross_return_pct": -3.72,
+      "rr": -1.07,
+      "outcome": "LOSS",
+      "alloc_pct": 0.07,
+      "equity_after": 99.7256,
+      "_cooldown_tracked": true
+    },
+    {
+      "sym": "FWRY",
+      "sector": "SERVICES",
+      "signal_type": "buy",
+      "regime": "WEAK",
+      "signal_date": "2024-12-05",
+      "entry_date": "2024-12-08",
+      "entry": 8.902,
+      "initial_stop": 8.457,
+      "stop": 8.457,
+      "target": 9.792,
+      "partial_target": 9.525,
+      "trailing_trigger": 9.347,
+      "trailing_stop_pct": 0.03,
+      "bars_held": 10,
+      "status": "OPEN",
+      "smart_rank": 80.52,
+      "score": 80.52,
+      "trade_type": "STRONG",
+      "risk_used": 0.0025,
+      "anticipation": 0.628,
+      "atr": 0.2243,
+      "size": 56,
+      "partial_taken": false,
+      "partial_exit_price": null,
+      "remaining_fraction": 1.0,
+      "trailing_active": false,
+      "trailing_anchor": 8.902,
+      "trigger_price": 8.88,
+      "fill_mode": "next_candle_touch",
+      "exit_date": "2024-12-19",
+      "exit": 8.436,
+      "pnl_pct": -5.43,
+      "gross_return_pct": -5.23,
+      "rr": -1.05,
+      "outcome": "LOSS",
+      "alloc_pct": 0.0499,
+      "equity_after": 99.4554,
+      "_cooldown_tracked": true
+    },
+    {
+      "sym": "COMI",
+      "sector": "BANKS",
+      "signal_type": "buy",
+      "regime": "WEAK",
+      "signal_date": "2024-12-16",
+      "entry_date": "2024-12-17",
+      "entry": 83.989,
+      "initial_stop": 80.604,
+      "stop": 80.604,
+      "target": 92.388,
+      "partial_target": 89.868,
+      "trailing_trigger": 88.188,
+      "trailing_stop_pct": 0.03,
+      "bars_held": 9,
+      "status": "OPEN",
+      "smart_rank": 80.39,
+      "score": 80.39,
+      "trade_type": "STRONG",
+      "risk_used": 0.0025,
+      "anticipation": 0.66,
+      "atr": 1.2443,
+      "size": 7,
+      "partial_taken": false,
+      "partial_exit_price": null,
+      "remaining_fraction": 1.0,
+      "trailing_active": false,
+      "trailing_anchor": 83.989,
+      "trigger_price": 83.78,
+      "fill_mode": "next_candle_touch",
+      "exit_date": "2024-12-29",
+      "exit": 80.402,
+      "pnl_pct": -4.47,
+      "gross_return_pct": -4.27,
+      "rr": -1.06,
+      "outcome": "LOSS",
+      "alloc_pct": 0.0588,
+      "equity_after": 99.194,
+      "_cooldown_tracked": true
+    },
+    {
+      "sym": "FWRY",
+      "sector": "SERVICES",
+      "signal_type": "buy",
+      "regime": "WEAK",
+      "signal_date": "2025-01-23",
+      "entry_date": "2025-01-26",
+      "entry": 8.772,
+      "initial_stop": 8.333,
+      "stop": 8.333,
+      "target": 9.649,
+      "partial_target": 9.386,
+      "trailing_trigger": 9.211,
+      "trailing_stop_pct": 0.03,
+      "bars_held": 3,
+      "status": "OPEN",
+      "smart_rank": 79.62,
+      "score": 79.62,
+      "trade_type": "STRONG",
+      "risk_used": 0.0025,
+      "anticipation": 0.915,
+      "atr": 0.3329,
+      "size": 56,
+      "partial_taken": false,
+      "partial_exit_price": null,
+      "remaining_fraction": 1.0,
+      "trailing_active": false,
+      "trailing_anchor": 8.772,
+      "trigger_price": 8.75,
+      "fill_mode": "next_candle_touch",
+      "exit_date": "2025-01-28",
+      "exit": 8.312,
+      "pnl_pct": -5.44,
+      "gross_return_pct": -5.24,
+      "rr": -1.05,
+      "outcome": "LOSS",
+      "alloc_pct": 0.0491,
+      "equity_after": 98.929,
+      "_cooldown_tracked": true
+    },
+    {
+      "sym": "ISPH",
+      "sector": "ENERGY",
+      "signal_type": "buy",
+      "regime": "WEAK",
+      "signal_date": "2025-01-23",
+      "entry_date": "2025-01-26",
+      "entry": 6.747,
+      "initial_stop": 6.41,
+      "stop": 7.081000185012817,
+      "target": 7.422,
+      "partial_target": 7.219,
+      "trailing_trigger": 7.084,
+      "trailing_stop_pct": 0.03,
+      "bars_held": 4,
+      "status": "OPEN",
+      "smart_rank": 82.11,
+      "score": 82.11,
+      "trade_type": "STRONG",
+      "risk_used": 0.0025,
+      "anticipation": 0.883,
+      "atr": 0.3936,
+      "size": 74,
+      "partial_taken": true,
+      "partial_exit_price": 7.201,
+      "remaining_fraction": 0.5,
+      "trailing_active": true,
+      "trailing_anchor": 7.300000190734863,
+      "trigger_price": 6.73,
+      "fill_mode": "next_candle_touch",
+      "exit_date": "2025-01-29",
+      "exit": 7.002,
+      "pnl_pct": 5.05,
+      "gross_return_pct": 5.25,
+      "rr": 1.05,
+      "outcome": "WIN",
+      "alloc_pct": 0.0499,
+      "equity_after": 99.1783,
+      "_cooldown_tracked": true
+    },
+    {
+      "sym": "ETEL",
+      "sector": "SERVICES",
+      "signal_type": "buy",
+      "regime": "WEAK",
+      "signal_date": "2025-02-16",
+      "entry_date": "2025-02-17",
+      "entry": 35.148,
+      "initial_stop": 33.391,
+      "stop": 37.150999259948726,
+      "target": 38.663,
+      "partial_target": 37.608,
+      "trailing_trigger": 36.905,
+      "trailing_stop_pct": 0.03,
+      "bars_held": 9,
+      "status": "OPEN",
+      "smart_rank": 80.77,
+      "score": 80.77,
+      "trade_type": "STRONG",
+      "risk_used": 0.0025,
+      "anticipation": 0.79,
+      "atr": 0.7514,
+      "size": 14,
+      "partial_taken": true,
+      "partial_exit_price": 37.514,
+      "remaining_fraction": 0.5,
+      "trailing_active": true,
+      "trailing_anchor": 38.29999923706055,
+      "trigger_price": 35.06,
+      "fill_mode": "next_candle_touch",
+      "exit_date": "2025-02-27",
+      "exit": 37.058,
+      "pnl_pct": 5.88,
+      "gross_return_pct": 6.08,
+      "rr": 1.22,
+      "outcome": "WIN",
+      "alloc_pct": 0.0492,
+      "equity_after": 99.4652,
+      "_cooldown_tracked": true
+    },
+    {
+      "sym": "ABUK",
+      "sector": "ENERGY",
+      "signal_type": "buy",
+      "regime": "WEAK",
+      "signal_date": "2025-02-10",
+      "entry_date": "2025-02-11",
+      "entry": 56.862,
+      "initial_stop": 54.019,
+      "stop": 59.64530162811279,
+      "target": 62.548,
+      "partial_target": 60.842,
+      "trailing_trigger": 59.705,
+      "trailing_stop_pct": 0.03,
+      "bars_held": 17,
+      "status": "OPEN",
+      "smart_rank": 73.98,
+      "score": 73.98,
+      "trade_type": "STRONG",
+      "risk_used": 0.0025,
+      "anticipation": 0.779,
+      "atr": 1.2821,
+      "size": 8,
+      "partial_taken": true,
+      "partial_exit_price": 60.69,
+      "remaining_fraction": 0.5,
+      "trailing_active": true,
+      "trailing_anchor": 61.4900016784668,
+      "trigger_price": 56.72,
+      "fill_mode": "next_candle_touch",
+      "exit_date": "2025-03-05",
+      "exit": 59.496,
+      "pnl_pct": 5.48,
+      "gross_return_pct": 5.68,
+      "rr": 1.14,
+      "outcome": "WIN",
+      "alloc_pct": 0.0455,
+      "equity_after": 99.7133,
+      "_cooldown_tracked": true
+    },
+    {
+      "sym": "ABUK",
+      "sector": "ENERGY",
+      "signal_type": "buy",
+      "regime": "WEAK",
+      "signal_date": "2025-03-06",
+      "entry_date": "2025-03-09",
+      "entry": 61.704,
+      "initial_stop": 58.619,
+      "stop": 58.619,
+      "target": 67.874,
+      "partial_target": 66.023,
+      "trailing_trigger": 64.789,
+      "trailing_stop_pct": 0.03,
+      "bars_held": 6,
+      "status": "OPEN",
+      "smart_rank": 74.15,
+      "score": 74.15,
+      "trade_type": "STRONG",
+      "risk_used": 0.0025,
+      "anticipation": 0.701,
+      "atr": 1.2207,
+      "size": 8,
+      "partial_taken": false,
+      "partial_exit_price": null,
+      "remaining_fraction": 1.0,
+      "trailing_active": false,
+      "trailing_anchor": 61.704,
+      "trigger_price": 61.55,
+      "fill_mode": "next_candle_touch",
+      "exit_date": "2025-03-16",
+      "exit": 58.472,
+      "pnl_pct": -5.44,
+      "gross_return_pct": -5.24,
+      "rr": -1.05,
+      "outcome": "LOSS",
+      "alloc_pct": 0.0494,
+      "equity_after": 99.4453,
+      "_cooldown_tracked": true
+    },
+    {
+      "sym": "EAST",
+      "sector": "ENERGY",
+      "signal_type": "buy",
+      "regime": "WEAK",
+      "signal_date": "2025-03-17",
+      "entry_date": "2025-03-18",
+      "entry": 31.278,
+      "initial_stop": 30.099,
+      "stop": 32.44650074005127,
+      "target": 34.406,
+      "partial_target": 33.467,
+      "trailing_trigger": 32.842,
+      "trailing_stop_pct": 0.03,
+      "bars_held": 5,
+      "status": "OPEN",
+      "smart_rank": 85.56,
+      "score": 85.56,
+      "trade_type": "STRONG",
+      "risk_used": 0.0025,
+      "anticipation": 0.806,
+      "atr": 0.7471,
+      "size": 21,
+      "partial_taken": false,
+      "partial_exit_price": null,
+      "remaining_fraction": 1.0,
+      "trailing_active": true,
+      "trailing_anchor": 33.45000076293945,
+      "trigger_price": 31.2,
+      "fill_mode": "next_candle_touch",
+      "exit_date": "2025-03-24",
+      "exit": 32.189,
+      "pnl_pct": 2.71,
+      "gross_return_pct": 2.91,
+      "rr": 0.77,
+      "outcome": "WIN",
+      "alloc_pct": 0.0657,
+      "equity_after": 99.6223,
+      "_cooldown_tracked": true
+    },
+    {
+      "sym": "ADIB",
+      "sector": "BANKS",
+      "signal_type": "buy",
+      "regime": "WEAK",
+      "signal_date": "2025-02-25",
+      "entry_date": "2025-02-26",
+      "entry": 41.784,
+      "initial_stop": 40.083,
+      "stop": 42.71880088806152,
+      "target": 45.962,
+      "partial_target": 44.709,
+      "trailing_trigger": 43.873,
+      "trailing_stop_pct": 0.03,
+      "bars_held": 20,
+      "status": "OPEN",
+      "smart_rank": 77.13,
+      "score": 77.13,
+      "trade_type": "STRONG",
+      "risk_used": 0.0025,
+      "anticipation": 0.625,
+      "atr": 1.03,
+      "size": 14,
+      "partial_taken": false,
+      "partial_exit_price": null,
+      "remaining_fraction": 1.0,
+      "trailing_active": true,
+      "trailing_anchor": 44.040000915527344,
+      "trigger_price": 41.68,
+      "fill_mode": "next_candle_touch",
+      "exit_date": "2025-03-25",
+      "exit": 43.671,
+      "pnl_pct": 4.32,
+      "gross_return_pct": 4.52,
+      "rr": 1.11,
+      "outcome": "EXIT",
+      "alloc_pct": 0.0585,
+      "equity_after": 99.8741,
+      "_cooldown_tracked": true
+    },
+    {
+      "sym": "EAST",
+      "sector": "ENERGY",
+      "signal_type": "buy",
+      "regime": "WEAK",
+      "signal_date": "2025-04-28",
+      "entry_date": "2025-04-29",
+      "entry": 35.118,
+      "initial_stop": 33.362,
+      "stop": 33.362,
+      "target": 38.63,
+      "partial_target": 37.576,
+      "trailing_trigger": 36.874,
+      "trailing_stop_pct": 0.03,
+      "bars_held": 15,
+      "status": "OPEN",
+      "smart_rank": 81.88,
+      "score": 81.88,
+      "trade_type": "STRONG",
+      "risk_used": 0.0025,
+      "anticipation": 0.795,
+      "atr": 1.23,
+      "size": 14,
+      "partial_taken": false,
+      "partial_exit_price": null,
+      "remaining_fraction": 1.0,
+      "trailing_active": false,
+      "trailing_anchor": 35.118,
+      "trigger_price": 35.03,
+      "fill_mode": "next_candle_touch",
+      "exit_date": "2025-05-20",
+      "exit": 33.279,
+      "pnl_pct": -5.44,
+      "gross_return_pct": -5.24,
+      "rr": -1.05,
+      "outcome": "LOSS",
+      "alloc_pct": 0.0492,
+      "equity_after": 99.6068,
+      "_cooldown_tracked": true
+    },
+    {
+      "sym": "MFPC",
+      "sector": "ENERGY",
+      "signal_type": "buy",
+      "regime": "STRONG",
+      "signal_date": "2025-07-06",
+      "entry_date": "2025-07-07",
+      "entry": 38.205,
+      "initial_stop": 36.295,
+      "stop": 36.295,
+      "target": 42.026,
+      "partial_target": 40.879,
+      "trailing_trigger": 40.115,
+      "trailing_stop_pct": 0.03,
+      "bars_held": 5,
+      "status": "OPEN",
+      "smart_rank": 72.73,
+      "score": 72.73,
+      "trade_type": "STRONG",
+      "risk_used": 0.005,
+      "anticipation": 0.815,
+      "atr": 1.2636,
+      "size": 26,
+      "partial_taken": false,
+      "partial_exit_price": null,
+      "remaining_fraction": 1.0,
+      "trailing_active": false,
+      "trailing_anchor": 38.205,
+      "trigger_price": 38.11,
+      "fill_mode": "next_candle_touch",
+      "exit_date": "2025-07-14",
+      "exit": 33.536,
+      "pnl_pct": -12.42,
+      "gross_return_pct": -12.22,
+      "rr": -2.44,
+      "outcome": "LOSS",
+      "alloc_pct": 0.0993,
+      "equity_after": 98.3783,
+      "_cooldown_tracked": true
+    },
+    {
+      "sym": "COMI",
+      "sector": "BANKS",
+      "signal_type": "early",
+      "regime": "STRONG",
+      "signal_date": "2025-07-14",
+      "entry_date": "2025-07-15",
+      "entry": 85.744,
+      "initial_stop": 83.343,
+      "stop": 92.14029792785644,
+      "target": 94.318,
+      "partial_target": 91.746,
+      "trailing_trigger": 90.031,
+      "trailing_stop_pct": 0.03,
+      "bars_held": 8,
+      "status": "OPEN",
+      "smart_rank": 69.95,
+      "score": 69.95,
+      "trade_type": "MEDIUM",
+      "risk_used": 0.002,
+      "anticipation": 0.517,
+      "atr": 1.655,
+      "size": 8,
+      "partial_taken": true,
+      "partial_exit_price": 91.517,
+      "remaining_fraction": 0.5,
+      "trailing_active": true,
+      "trailing_anchor": 94.98999786376953,
+      "trigger_price": 85.53,
+      "fill_mode": "next_candle_touch",
+      "exit_date": "2025-07-27",
+      "exit": 94.082,
+      "pnl_pct": 8.03,
+      "gross_return_pct": 8.23,
+      "rr": 2.94,
+      "outcome": "WIN",
+      "alloc_pct": 0.0686,
+      "equity_after": 98.9203,
+      "_cooldown_tracked": true
+    },
+    {
+      "sym": "ABUK",
+      "sector": "ENERGY",
+      "signal_type": "buy",
+      "regime": "WEAK",
+      "signal_date": "2025-07-10",
+      "entry_date": "2025-07-13",
+      "entry": 50.967,
+      "initial_stop": 48.419,
+      "stop": 52.85530162811279,
+      "target": 56.064,
+      "partial_target": 54.535,
+      "trailing_trigger": 53.515,
+      "trailing_stop_pct": 0.03,
+      "bars_held": 20,
+      "status": "OPEN",
+      "smart_rank": 79.18,
+      "score": 79.18,
+      "trade_type": "STRONG",
+      "risk_used": 0.0025,
+      "anticipation": 0.785,
+      "atr": 1.255,
+      "size": 9,
+      "partial_taken": false,
+      "partial_exit_price": null,
+      "remaining_fraction": 1.0,
+      "trailing_active": true,
+      "trailing_anchor": 54.4900016784668,
+      "trigger_price": 50.84,
+      "fill_mode": "next_candle_touch",
+      "exit_date": "2025-08-10",
+      "exit": 54.074,
+      "pnl_pct": 5.9,
+      "gross_return_pct": 6.1,
+      "rr": 1.22,
+      "outcome": "EXIT",
+      "alloc_pct": 0.0459,
+      "equity_after": 99.1882,
+      "_cooldown_tracked": true
+    },
+    {
+      "sym": "CIEB",
+      "sector": "BANKS",
+      "signal_type": "early",
+      "regime": "STRONG",
+      "signal_date": "2025-07-14",
+      "entry_date": "2025-07-15",
+      "entry": 18.085,
+      "initial_stop": 17.579,
+      "stop": 18.711300888061523,
+      "target": 19.894,
+      "partial_target": 19.351,
+      "trailing_trigger": 18.989,
+      "trailing_stop_pct": 0.03,
+      "bars_held": 20,
+      "status": "OPEN",
+      "smart_rank": 60.38,
+      "score": 60.38,
+      "trade_type": "MEDIUM",
+      "risk_used": 0.002,
+      "anticipation": 0.605,
+      "atr": 0.3607,
+      "size": 39,
+      "partial_taken": false,
+      "partial_exit_price": null,
+      "remaining_fraction": 1.0,
+      "trailing_active": true,
+      "trailing_anchor": 19.290000915527344,
+      "trigger_price": 18.04,
+      "fill_mode": "next_candle_touch",
+      "exit_date": "2025-08-12",
+      "exit": 19.142,
+      "pnl_pct": 5.64,
+      "gross_return_pct": 5.84,
+      "rr": 2.09,
+      "outcome": "EXIT",
+      "alloc_pct": 0.0705,
+      "equity_after": 99.5825,
+      "_cooldown_tracked": true
+    },
+    {
+      "sym": "ISPH",
+      "sector": "ENERGY",
+      "signal_type": "buy",
+      "regime": "WEAK",
+      "signal_date": "2025-08-17",
+      "entry_date": "2025-08-18",
+      "entry": 11.038,
+      "initial_stop": 10.486,
+      "stop": 10.486,
+      "target": 12.142,
+      "partial_target": 11.811,
+      "trailing_trigger": 11.59,
+      "trailing_stop_pct": 0.03,
+      "bars_held": 8,
+      "status": "OPEN",
+      "smart_rank": 74.84,
+      "score": 74.84,
+      "trade_type": "STRONG",
+      "risk_used": 0.0025,
+      "anticipation": 0.531,
+      "atr": 0.2557,
+      "size": 45,
+      "partial_taken": false,
+      "partial_exit_price": null,
+      "remaining_fraction": 1.0,
+      "trailing_active": false,
+      "trailing_anchor": 11.038,
+      "trigger_price": 11.01,
+      "fill_mode": "next_candle_touch",
+      "exit_date": "2025-08-27",
+      "exit": 10.46,
+      "pnl_pct": -5.44,
+      "gross_return_pct": -5.24,
+      "rr": -1.05,
+      "outcome": "LOSS",
+      "alloc_pct": 0.0497,
+      "equity_after": 99.3133,
+      "_cooldown_tracked": true
+    },
+    {
+      "sym": "ETEL",
+      "sector": "SERVICES",
+      "signal_type": "buy",
+      "regime": "STRONG",
+      "signal_date": "2025-10-15",
+      "entry_date": "2025-10-16",
+      "entry": 50.706,
+      "initial_stop": 48.171,
+      "stop": 48.171,
+      "target": 55.777,
+      "partial_target": 54.255,
+      "trailing_trigger": 53.241,
+      "trailing_stop_pct": 0.03,
+      "bars_held": 12,
+      "status": "OPEN",
+      "smart_rank": 86.31,
+      "score": 86.31,
+      "trade_type": "STRONG",
+      "risk_used": 0.005,
+      "anticipation": 0.796,
+      "atr": 1.9657,
+      "size": 19,
+      "partial_taken": false,
+      "partial_exit_price": null,
+      "remaining_fraction": 1.0,
+      "trailing_active": false,
+      "trailing_anchor": 50.706,
+      "trigger_price": 50.58,
+      "fill_mode": "next_candle_touch",
+      "exit_date": "2025-11-02",
+      "exit": 48.051,
+      "pnl_pct": -5.44,
+      "gross_return_pct": -5.24,
+      "rr": -1.05,
+      "outcome": "LOSS",
+      "alloc_pct": 0.0963,
+      "equity_after": 98.793,
+      "_cooldown_tracked": true
+    },
+    {
+      "sym": "CIEB",
+      "sector": "BANKS",
+      "signal_type": "buy",
+      "regime": "STRONG",
+      "signal_date": "2025-10-21",
+      "entry_date": "2025-10-22",
+      "entry": 19.318,
+      "initial_stop": 18.555,
+      "stop": 20.855,
+      "target": 21.25,
+      "partial_target": 20.67,
+      "trailing_trigger": 20.284,
+      "trailing_stop_pct": 0.03,
+      "bars_held": 8,
+      "status": "OPEN",
+      "smart_rank": 70.91,
+      "score": 70.91,
+      "trade_type": "STRONG",
+      "risk_used": 0.005,
+      "anticipation": 0.65,
+      "atr": 0.2836,
+      "size": 65,
+      "partial_taken": true,
+      "partial_exit_price": 20.618,
+      "remaining_fraction": 0.5,
+      "trailing_active": true,
+      "trailing_anchor": 21.5,
+      "trigger_price": 19.27,
+      "fill_mode": "next_candle_touch",
+      "exit_date": "2025-11-02",
+      "exit": 21.197,
+      "pnl_pct": 8.03,
+      "gross_return_pct": 8.23,
+      "rr": 2.08,
+      "outcome": "WIN",
+      "alloc_pct": 0.1256,
+      "equity_after": 99.7894,
+      "_cooldown_tracked": true
+    },
+    {
+      "sym": "CIEB",
+      "sector": "BANKS",
+      "signal_type": "buy",
+      "regime": "WEAK",
+      "signal_date": "2025-11-03",
+      "entry_date": "2025-11-04",
+      "entry": 21.453,
+      "initial_stop": 20.38,
+      "stop": 22.49430051803589,
+      "target": 23.598,
+      "partial_target": 22.955,
+      "trailing_trigger": 22.526,
+      "trailing_stop_pct": 0.03,
+      "bars_held": 14,
+      "status": "OPEN",
+      "smart_rank": 84.2,
+      "score": 84.2,
+      "trade_type": "STRONG",
+      "risk_used": 0.0025,
+      "anticipation": 0.772,
+      "atr": 0.4579,
+      "size": 23,
+      "partial_taken": true,
+      "partial_exit_price": 22.898,
+      "remaining_fraction": 0.5,
+      "trailing_active": true,
+      "trailing_anchor": 23.190000534057617,
+      "trigger_price": 21.4,
+      "fill_mode": "next_candle_touch",
+      "exit_date": "2025-11-23",
+      "exit": 22.438,
+      "pnl_pct": 5.46,
+      "gross_return_pct": 5.66,
+      "rr": 1.13,
+      "outcome": "WIN",
+      "alloc_pct": 0.0493,
+      "equity_after": 100.058,
+      "_cooldown_tracked": true
+    },
+    {
+      "sym": "COMI",
+      "sector": "BANKS",
+      "signal_type": "buy",
+      "regime": "STRONG",
+      "signal_date": "2025-11-09",
+      "entry_date": "2025-11-10",
+      "entry": 109.764,
+      "initial_stop": 104.276,
+      "stop": 114.68310325622558,
+      "target": 120.74,
+      "partial_target": 117.447,
+      "trailing_trigger": 115.252,
+      "trailing_stop_pct": 0.03,
+      "bars_held": 20,
+      "status": "OPEN",
+      "smart_rank": 79.77,
+      "score": 79.77,
+      "trade_type": "STRONG",
+      "risk_used": 0.005,
+      "anticipation": 0.663,
+      "atr": 1.9993,
+      "size": 9,
+      "partial_taken": true,
+      "partial_exit_price": 117.153,
+      "remaining_fraction": 0.5,
+      "trailing_active": true,
+      "trailing_anchor": 118.2300033569336,
+      "trigger_price": 109.49,
+      "fill_mode": "next_candle_touch",
+      "exit_date": "2025-12-07",
+      "exit": 115.909,
+      "pnl_pct": 5.97,
+      "gross_return_pct": 6.17,
+      "rr": 1.23,
+      "outcome": "EXIT",
+      "alloc_pct": 0.0988,
+      "equity_after": 100.6482,
+      "_cooldown_tracked": true
+    },
+    {
+      "sym": "CIEB",
+      "sector": "BANKS",
+      "signal_type": "buy",
+      "regime": "STRONG",
+      "signal_date": "2025-12-08",
+      "entry_date": "2025-12-09",
+      "entry": 22.677,
+      "initial_stop": 21.545,
+      "stop": 21.545,
+      "target": 24.945,
+      "partial_target": 24.264,
+      "trailing_trigger": 23.811,
+      "trailing_stop_pct": 0.03,
+      "bars_held": 3,
+      "status": "OPEN",
+      "smart_rank": 76.2,
+      "score": 76.2,
+      "trade_type": "STRONG",
+      "risk_used": 0.005,
+      "anticipation": 0.668,
+      "atr": 0.6957,
+      "size": 44,
+      "partial_taken": false,
+      "partial_exit_price": null,
+      "remaining_fraction": 1.0,
+      "trailing_active": false,
+      "trailing_anchor": 22.677,
+      "trigger_price": 22.62,
+      "fill_mode": "next_candle_touch",
+      "exit_date": "2025-12-11",
+      "exit": 21.491,
+      "pnl_pct": -5.43,
+      "gross_return_pct": -5.23,
+      "rr": -1.05,
+      "outcome": "LOSS",
+      "alloc_pct": 0.0998,
+      "equity_after": 100.1028,
+      "_cooldown_tracked": true
+    },
+    {
+      "sym": "CNFN",
+      "sector": "BANKS",
+      "signal_type": "early",
+      "regime": "STRONG",
+      "signal_date": "2025-12-08",
+      "entry_date": "2025-12-09",
+      "entry": 5.083,
+      "initial_stop": 4.941,
+      "stop": 5.247699851989746,
+      "target": 5.591,
+      "partial_target": 5.439,
+      "trailing_trigger": 5.337,
+      "trailing_stop_pct": 0.03,
+      "bars_held": 5,
+      "status": "OPEN",
+      "smart_rank": 68.99,
+      "score": 68.99,
+      "trade_type": "MEDIUM",
+      "risk_used": 0.002,
+      "anticipation": 0.523,
+      "atr": 0.1429,
+      "size": 140,
+      "partial_taken": false,
+      "partial_exit_price": null,
+      "remaining_fraction": 1.0,
+      "trailing_active": true,
+      "trailing_anchor": 5.409999847412109,
+      "trigger_price": 5.07,
+      "fill_mode": "next_candle_touch",
+      "exit_date": "2025-12-15",
+      "exit": 5.235,
+      "pnl_pct": 2.79,
+      "gross_return_pct": 2.99,
+      "rr": 1.07,
+      "outcome": "WIN",
+      "alloc_pct": 0.0712,
+      "equity_after": 100.3016,
+      "_cooldown_tracked": true
+    },
+    {
+      "sym": "ETEL",
+      "sector": "SERVICES",
+      "signal_type": "buy",
+      "regime": "WEAK",
+      "signal_date": "2025-12-11",
+      "entry_date": "2025-12-14",
+      "entry": 65.664,
+      "initial_stop": 62.381,
+      "stop": 62.381,
+      "target": 72.23,
+      "partial_target": 70.26,
+      "trailing_trigger": 68.947,
+      "trailing_stop_pct": 0.03,
+      "bars_held": 5,
+      "status": "OPEN",
+      "smart_rank": 84.42,
+      "score": 84.42,
+      "trade_type": "STRONG",
+      "risk_used": 0.0025,
+      "anticipation": 0.742,
+      "atr": 2.4171,
+      "size": 7,
+      "partial_taken": false,
+      "partial_exit_price": null,
+      "remaining_fraction": 1.0,
+      "trailing_active": false,
+      "trailing_anchor": 65.664,
+      "trigger_price": 65.5,
+      "fill_mode": "next_candle_touch",
+      "exit_date": "2025-12-18",
+      "exit": 62.225,
+      "pnl_pct": -5.44,
+      "gross_return_pct": -5.24,
+      "rr": -1.05,
+      "outcome": "LOSS",
+      "alloc_pct": 0.046,
+      "equity_after": 100.0506,
+      "_cooldown_tracked": true
+    },
+    {
+      "sym": "ABUK",
+      "sector": "ENERGY",
+      "signal_type": "buy",
+      "regime": "WEAK",
+      "signal_date": "2025-12-14",
+      "entry_date": "2025-12-15",
+      "entry": 48.431,
+      "initial_stop": 46.009,
+      "stop": 51.02199851989746,
+      "target": 53.274,
+      "partial_target": 51.821,
+      "trailing_trigger": 50.853,
+      "trailing_stop_pct": 0.03,
+      "bars_held": 12,
+      "status": "OPEN",
+      "smart_rank": 74.21,
+      "score": 74.21,
+      "trade_type": "STRONG",
+      "risk_used": 0.0025,
+      "anticipation": 0.858,
+      "atr": 0.6336,
+      "size": 10,
+      "partial_taken": true,
+      "partial_exit_price": 51.691,
+      "remaining_fraction": 0.5,
+      "trailing_active": true,
+      "trailing_anchor": 52.599998474121094,
+      "trigger_price": 48.31,
+      "fill_mode": "next_candle_touch",
+      "exit_date": "2025-12-30",
+      "exit": 50.894,
+      "pnl_pct": 5.71,
+      "gross_return_pct": 5.91,
+      "rr": 1.18,
+      "outcome": "WIN",
+      "alloc_pct": 0.0484,
+      "equity_after": 100.3272,
+      "_cooldown_tracked": true
+    },
+    {
+      "sym": "MFPC",
+      "sector": "ENERGY",
+      "signal_type": "buy",
+      "regime": "WEAK",
+      "signal_date": "2025-12-16",
+      "entry_date": "2025-12-17",
+      "entry": 29.353,
+      "initial_stop": 27.929,
+      "stop": 30.74900074005127,
+      "target": 32.288,
+      "partial_target": 31.408,
+      "trailing_trigger": 30.821,
+      "trailing_stop_pct": 0.03,
+      "bars_held": 10,
+      "status": "OPEN",
+      "smart_rank": 73.74,
+      "score": 73.74,
+      "trade_type": "STRONG",
+      "risk_used": 0.0025,
+      "anticipation": 0.714,
+      "atr": 0.41,
+      "size": 17,
+      "partial_taken": true,
+      "partial_exit_price": 31.329,
+      "remaining_fraction": 0.5,
+      "trailing_active": true,
+      "trailing_anchor": 31.700000762939453,
+      "trigger_price": 29.28,
+      "fill_mode": "next_candle_touch",
+      "exit_date": "2025-12-30",
+      "exit": 30.672,
+      "pnl_pct": 5.41,
+      "gross_return_pct": 5.61,
+      "rr": 1.16,
+      "outcome": "WIN",
+      "alloc_pct": 0.0499,
+      "equity_after": 100.598,
+      "_cooldown_tracked": true
+    }
+  ]
+}

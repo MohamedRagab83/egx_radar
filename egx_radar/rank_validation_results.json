@@ -1,0 +1,368 @@
+{
+  "systems": {
+    "smart_rank": {
+      "label": "SmartRank   (production)",
+      "available": true,
+      "spread": {
+        "spread": -3.018,
+        "winner_avg": 75.78,
+        "loser_avg": 78.8,
+        "n_winners": 14,
+        "n_losers": 11,
+        "n_valid": 25
+      },
+      "correlation": {
+        "pearson": -0.2416,
+        "spearman": -0.2843,
+        "n_valid": 25
+      },
+      "quartiles": {
+        "quartiles": [
+          {
+            "label": "Q1 (lowest 25%)",
+            "count": 6,
+            "rank_range": [
+              60.4,
+              73.7
+            ],
+            "avg_pnl": 2.913,
+            "win_rate": 83.3
+          },
+          {
+            "label": "Q2 (25-50%)",
+            "count": 6,
+            "rank_range": [
+              74.0,
+              76.2
+            ],
+            "avg_pnl": -1.507,
+            "win_rate": 33.3
+          },
+          {
+            "label": "Q3 (50-75%)",
+            "count": 6,
+            "rank_range": [
+              77.1,
+              80.5
+            ],
+            "avg_pnl": 0.142,
+            "win_rate": 50.0
+          },
+          {
+            "label": "Q4 (top 25%)",
+            "count": 7,
+            "rank_range": [
+              80.8,
+              86.3
+            ],
+            "avg_pnl": 0.397,
+            "win_rate": 57.1
+          }
+        ],
+        "monotonic": false,
+        "n_valid": 25
+      },
+      "false_positives": {
+        "levels": [
+          {
+            "threshold": 50.0,
+            "count": 25,
+            "win_rate": 56.0,
+            "avg_pnl": 0.483,
+            "false_positive_rate": 44.0
+          },
+          {
+            "threshold": 60.0,
+            "count": 25,
+            "win_rate": 56.0,
+            "avg_pnl": 0.483,
+            "false_positive_rate": 44.0
+          },
+          {
+            "threshold": 70.0,
+            "count": 22,
+            "win_rate": 50.0,
+            "avg_pnl": -0.2,
+            "false_positive_rate": 50.0
+          },
+          {
+            "threshold": 80.0,
+            "count": 9,
+            "win_rate": 44.4,
+            "avg_pnl": -0.791,
+            "false_positive_rate": 55.6
+          }
+        ],
+        "n_valid": 25
+      },
+      "by_regime": {
+        "WEAK": {
+          "count": 17,
+          "spread": 0.048,
+          "winner_avg": 78.99,
+          "loser_avg": 78.94,
+          "pearson_r": -0.0553,
+          "spearman_ic": -0.1365
+        },
+        "STRONG": {
+          "count": 8,
+          "spread": -8.413,
+          "winner_avg": 70.0,
+          "loser_avg": 78.41,
+          "pearson_r": -0.4099,
+          "spearman_ic": -0.3713
+        }
+      }
+    },
+    "multi_factor_rank": {
+      "label": "Multi-Factor (experimental)",
+      "available": true,
+      "spread": {
+        "spread": -4.129,
+        "winner_avg": 72.27,
+        "loser_avg": 76.4,
+        "n_winners": 14,
+        "n_losers": 11,
+        "n_valid": 25
+      },
+      "correlation": {
+        "pearson": -0.0236,
+        "spearman": -0.0682,
+        "n_valid": 25
+      },
+      "quartiles": {
+        "quartiles": [
+          {
+            "label": "Q1 (lowest 25%)",
+            "count": 6,
+            "rank_range": [
+              44.6,
+              63.9
+            ],
+            "avg_pnl": 2.518,
+            "win_rate": 83.3
+          },
+          {
+            "label": "Q2 (25-50%)",
+            "count": 6,
+            "rank_range": [
+              64.0,
+              73.6
+            ],
+            "avg_pnl": 0.195,
+            "win_rate": 50.0
+          },
+          {
+            "label": "Q3 (50-75%)",
+            "count": 6,
+            "rank_range": [
+              74.8,
+              81.8
+            ],
+            "avg_pnl": -0.003,
+            "win_rate": 50.0
+          },
+          {
+            "label": "Q4 (top 25%)",
+            "count": 7,
+            "rank_range": [
+              84.4,
+              94.4
+            ],
+            "avg_pnl": -0.599,
+            "win_rate": 42.9
+          }
+        ],
+        "monotonic": false,
+        "n_valid": 25
+      },
+      "false_positives": {
+        "levels": [
+          {
+            "threshold": 50.0,
+            "count": 24,
+            "win_rate": 58.3,
+            "avg_pnl": 1.02,
+            "false_positive_rate": 41.7
+          },
+          {
+            "threshold": 60.0,
+            "count": 23,
+            "win_rate": 56.5,
+            "avg_pnl": 0.817,
+            "false_positive_rate": 43.5
+          },
+          {
+            "threshold": 70.0,
+            "count": 17,
+            "win_rate": 47.1,
+            "avg_pnl": -0.21,
+            "false_positive_rate": 52.9
+          },
+          {
+            "threshold": 80.0,
+            "count": 9,
+            "win_rate": 44.4,
+            "avg_pnl": -0.178,
+            "false_positive_rate": 55.6
+          }
+        ],
+        "n_valid": 25
+      },
+      "by_regime": {
+        "WEAK": {
+          "count": 17,
+          "spread": -9.742,
+          "winner_avg": 69.95,
+          "loser_avg": 79.69,
+          "pearson_r": -0.5085,
+          "spearman_ic": -0.4541
+        },
+        "STRONG": {
+          "count": 8,
+          "spread": 8.827,
+          "winner_avg": 76.45,
+          "loser_avg": 67.62,
+          "pearson_r": 0.5548,
+          "spearman_ic": 0.4431
+        }
+      }
+    },
+    "final_rank": {
+      "label": "Final Rank   (hybrid 60/40)",
+      "available": true,
+      "spread": {
+        "spread": -3.462,
+        "winner_avg": 74.38,
+        "loser_avg": 77.84,
+        "n_winners": 14,
+        "n_losers": 11,
+        "n_valid": 25
+      },
+      "correlation": {
+        "pearson": -0.1678,
+        "spearman": -0.2727,
+        "n_valid": 25
+      },
+      "quartiles": {
+        "quartiles": [
+          {
+            "label": "Q1 (lowest 25%)",
+            "count": 6,
+            "rank_range": [
+              61.5,
+              72.0
+            ],
+            "avg_pnl": 0.8,
+            "win_rate": 66.7
+          },
+          {
+            "label": "Q2 (25-50%)",
+            "count": 6,
+            "rank_range": [
+              72.2,
+              75.3
+            ],
+            "avg_pnl": 5.463,
+            "win_rate": 100.0
+          },
+          {
+            "label": "Q3 (50-75%)",
+            "count": 6,
+            "rank_range": [
+              76.0,
+              80.0
+            ],
+            "avg_pnl": 0.318,
+            "win_rate": 50.0
+          },
+          {
+            "label": "Q4 (top 25%)",
+            "count": 7,
+            "rank_range": [
+              80.6,
+              85.7
+            ],
+            "avg_pnl": -3.917,
+            "win_rate": 14.3
+          }
+        ],
+        "monotonic": false,
+        "n_valid": 25
+      },
+      "false_positives": {
+        "levels": [
+          {
+            "threshold": 50.0,
+            "count": 25,
+            "win_rate": 56.0,
+            "avg_pnl": 0.483,
+            "false_positive_rate": 44.0
+          },
+          {
+            "threshold": 60.0,
+            "count": 25,
+            "win_rate": 56.0,
+            "avg_pnl": 0.483,
+            "false_positive_rate": 44.0
+          },
+          {
+            "threshold": 70.0,
+            "count": 21,
+            "win_rate": 52.4,
+            "avg_pnl": 0.368,
+            "false_positive_rate": 47.6
+          },
+          {
+            "threshold": 80.0,
+            "count": 8,
+            "win_rate": 25.0,
+            "avg_pnl": -2.888,
+            "false_positive_rate": 75.0
+          }
+        ],
+        "n_valid": 25
+      },
+      "by_regime": {
+        "WEAK": {
+          "count": 17,
+          "spread": -3.867,
+          "winner_avg": 75.37,
+          "loser_avg": 79.24,
+          "pearson_r": -0.4522,
+          "spearman_ic": -0.4095
+        },
+        "STRONG": {
+          "count": 8,
+          "spread": -1.52,
+          "winner_avg": 72.58,
+          "loser_avg": 74.1,
+          "pearson_r": 0.1818,
+          "spearman_ic": 0.1317
+        }
+      }
+    }
+  },
+  "summary": {
+    "best_spread": "smart_rank",
+    "best_pearson_correlation": "multi_factor_rank",
+    "best_spearman_ic": "multi_factor_rank",
+    "best_precision_at_70": "final_rank",
+    "all_spreads": {
+      "smart_rank": -3.018,
+      "multi_factor_rank": -4.129,
+      "final_rank": -3.462
+    },
+    "all_pearsons": {
+      "smart_rank": -0.2416,
+      "multi_factor_rank": -0.0236,
+      "final_rank": -0.1678
+    },
+    "all_spearmans": {
+      "smart_rank": -0.2843,
+      "multi_factor_rank": -0.0682,
+      "final_rank": -0.2727
+    }
+  },
+  "n_trades": 25
+}

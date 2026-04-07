@@ -1,0 +1,121 @@
+{
+  "date_from": "2024-01-01",
+  "date_to": "2024-12-31",
+  "baseline": {
+    "trades": 3,
+    "win_rate_pct": 33.3,
+    "total_return_pct": -0.5,
+    "max_drawdown_pct": 0.5,
+    "sharpe_ratio": -5.85,
+    "profit_factor": 0.1,
+    "expectancy_pct": -2.8,
+    "quality_distribution": {
+      "strong_exposure_pct": 100.0,
+      "medium_exposure_pct": 0.0,
+      "weak_exposure_pct": 0.0
+    },
+    "sample_trades": [
+      {
+        "sym": "ADIB",
+        "signal_date": "2024-12-03",
+        "entry_date": "2024-12-04",
+        "exit_date": "2024-12-10",
+        "smart_rank": 75.69,
+        "probability": 0.7853,
+        "trade_class": "STRONG",
+        "risk_used": 0.0025,
+        "alloc_pct": 0.07,
+        "pnl_pct": -3.92,
+        "outcome": "LOSS"
+      },
+      {
+        "sym": "OCDI",
+        "signal_date": "2024-12-04",
+        "entry_date": "2024-12-05",
+        "exit_date": "2024-12-10",
+        "smart_rank": 76.93,
+        "probability": 0.7216,
+        "trade_class": "STRONG",
+        "risk_used": 0.0025,
+        "alloc_pct": 0.0438,
+        "pnl_pct": 0.96,
+        "outcome": "WIN"
+      },
+      {
+        "sym": "FWRY",
+        "signal_date": "2024-12-05",
+        "entry_date": "2024-12-08",
+        "exit_date": "2024-12-19",
+        "smart_rank": 80.52,
+        "probability": 0.7344,
+        "trade_class": "STRONG",
+        "risk_used": 0.0025,
+        "alloc_pct": 0.0499,
+        "pnl_pct": -5.43,
+        "outcome": "LOSS"
+      }
+    ]
+  },
+  "ai_version": {
+    "trades": 3,
+    "win_rate_pct": 33.3,
+    "total_return_pct": -0.5,
+    "max_drawdown_pct": 0.5,
+    "sharpe_ratio": -5.85,
+    "profit_factor": 0.1,
+    "expectancy_pct": -2.8,
+    "quality_distribution": {
+      "strong_exposure_pct": 100.0,
+      "medium_exposure_pct": 0.0,
+      "weak_exposure_pct": 0.0
+    },
+    "sample_trades": [
+      {
+        "sym": "ADIB",
+        "signal_date": "2024-12-03",
+        "entry_date": "2024-12-04",
+        "exit_date": "2024-12-10",
+        "smart_rank": 75.69,
+        "probability": 0.7853,
+        "trade_class": "STRONG",
+        "risk_used": 0.0025,
+        "alloc_pct": 0.07,
+        "pnl_pct": -3.92,
+        "outcome": "LOSS"
+      },
+      {
+        "sym": "OCDI",
+        "signal_date": "2024-12-04",
+        "entry_date": "2024-12-05",
+        "exit_date": "2024-12-10",
+        "smart_rank": 76.93,
+        "probability": 0.7216,
+        "trade_class": "STRONG",
+        "risk_used": 0.0025,
+        "alloc_pct": 0.0438,
+        "pnl_pct": 0.96,
+        "outcome": "WIN"
+      },
+      {
+        "sym": "FWRY",
+        "signal_date": "2024-12-05",
+        "entry_date": "2024-12-08",
+        "exit_date": "2024-12-19",
+        "smart_rank": 80.52,
+        "probability": 0.7344,
+        "trade_class": "STRONG",
+        "risk_used": 0.0025,
+        "alloc_pct": 0.0499,
+        "pnl_pct": -5.43,
+        "outcome": "LOSS"
+      }
+    ]
+  },
+  "validation": {
+    "sharpe_ok": true,
+    "max_drawdown_ok": true,
+    "win_rate_ok": true,
+    "quality_ok": true,
+    "approved": true
+  }
+}

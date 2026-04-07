@@ -1,0 +1,114 @@
+{
+  "params": {
+    "date_from": "2025-10-01",
+    "date_to": "2025-12-31",
+    "evaluated_days": 2,
+    "symbol_count": 5,
+    "backup_path": "D:\\egx radar seprated\\egx_radar\\core\\accumulation.py.bak",
+    "symbols": [],
+    "max_symbols": 5
+  },
+  "counts": {
+    "before_results": 0,
+    "after_results": 0,
+    "before_accum_candidates": 0,
+    "after_accum_candidates": 0,
+    "final_decision_changes": 0
+  },
+  "integrity": {
+    "before_nonfinite_accum": 0,
+    "after_nonfinite_accum": 0,
+    "before_nonfinite_rank_inputs": 0,
+    "after_nonfinite_rank_inputs": 0
+  },
+  "distribution_shift": {
+    "accumulation_quality_score": {
+      "count": 0,
+      "before_mean": null,
+      "after_mean": null,
+      "before_median": null,
+      "after_median": null,
+      "mean_delta": null,
+      "median_delta": null,
+      "max_abs_delta": null,
+      "changed_ge_1": 0,
+      "changed_ge_3": 0,
+      "changed_ge_5": 0
+    },
+    "compression_score": {
+      "count": 0,
+      "before_mean": null,
+      "after_mean": null,
+      "before_median": null,
+      "after_median": null,
+      "mean_delta": null,
+      "median_delta": null,
+      "max_abs_delta": null,
+      "changed_ge_1": 0,
+      "changed_ge_3": 0,
+      "changed_ge_5": 0
+    },
+    "volume_quality_score": {
+      "count": 0,
+      "before_mean": null,
+      "after_mean": null,
+      "before_median": null,
+      "after_median": null,
+      "mean_delta": null,
+      "median_delta": null,
+      "max_abs_delta": null,
+      "changed_ge_1": 0,
+      "changed_ge_3": 0,
+      "changed_ge_5": 0
+    },
+    "smart_rank": {
+      "count": 0,
+      "before_mean": null,
+      "after_mean": null,
+      "before_median": null,
+      "after_median": null,
+      "mean_delta": null,
+      "median_delta": null,
+      "max_abs_delta": null,
+      "changed_ge_1": 0,
+      "changed_ge_3": 0,
+      "changed_ge_5": 0
+    }
+  },
+  "material_changes": [],
+  "decision_changes": [],
+  "before_nonfinite_examples": [],
+  "after_nonfinite_examples": [],
+  "before_rank_input_examples": [],
+  "after_rank_input_examples": [],
+  "before_day_meta": {
+    "2025-12-29": {
+      "pre_regime": "NEUTRAL",
+      "market_regime": "WEAK",
+      "final_regime": "NEUTRAL",
+      "result_count": 0
+    },
+    "2025-12-30": {
+      "pre_regime": "NEUTRAL",
+      "market_regime": "WEAK",
+      "final_regime": "NEUTRAL",
+      "result_count": 0
+    }
+  },
+  "after_day_meta": {
+    "2025-12-29": {
+      "pre_regime": "NEUTRAL",
+      "market_regime": "WEAK",
+      "final_regime": "NEUTRAL",
+      "result_count": 0
+    },
+    "2025-12-30": {
+      "pre_regime": "NEUTRAL",
+      "market_regime": "WEAK",
+      "final_regime": "NEUTRAL",
+      "result_count": 0
+    }
+  },
+  "before_errors": [],
+  "after_errors": []
+}

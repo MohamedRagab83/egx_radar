@@ -1,0 +1,80 @@
+{
+  "summary": {
+    "total_records": 6,
+    "wins": 2,
+    "avg_pnl_pct": -2.8
+  },
+  "by_trade_class": {
+    "STRONG": {
+      "count": 6,
+      "wins": 2,
+      "avg_pnl_pct": -2.8
+    },
+    "MEDIUM": {
+      "count": 0,
+      "wins": 0,
+      "avg_pnl_pct": 0.0
+    },
+    "WEAK": {
+      "count": 0,
+      "wins": 0,
+      "avg_pnl_pct": 0.0
+    }
+  },
+  "recent_outcomes": [
+    {
+      "symbol": "ADIB",
+      "probability": 0.7853,
+      "trade_class": "STRONG",
+      "pnl_pct": -3.92,
+      "outcome": "LOSS",
+      "smart_rank": 75.69,
+      "signal_date": "2024-12-03"
+    },
+    {
+      "symbol": "OCDI",
+      "probability": 0.7216,
+      "trade_class": "STRONG",
+      "pnl_pct": 0.96,
+      "outcome": "WIN",
+      "smart_rank": 76.93,
+      "signal_date": "2024-12-04"
+    },
+    {
+      "symbol": "FWRY",
+      "probability": 0.7344,
+      "trade_class": "STRONG",
+      "pnl_pct": -5.43,
+      "outcome": "LOSS",
+      "smart_rank": 80.52,
+      "signal_date": "2024-12-05"
+    },
+    {
+      "symbol": "ADIB",
+      "probability": 0.7853,
+      "trade_class": "STRONG",
+      "pnl_pct": -3.92,
+      "outcome": "LOSS",
+      "smart_rank": 75.69,
+      "signal_date": "2024-12-03"
+    },
+    {
+      "symbol": "OCDI",
+      "probability": 0.7216,
+      "trade_class": "STRONG",
+      "pnl_pct": 0.96,
+      "outcome": "WIN",
+      "smart_rank": 76.93,
+      "signal_date": "2024-12-04"
+    },
+    {
+      "symbol": "FWRY",
+      "probability": 0.7344,
+      "trade_class": "STRONG",
+      "pnl_pct": -5.43,
+      "outcome": "LOSS",
+      "smart_rank": 80.52,
+      "signal_date": "2024-12-05"
+    }
+  ]
+}

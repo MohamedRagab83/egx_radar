@@ -1,0 +1,16 @@
+{
+  "total_trades": 5,
+  "win_rate": 40.0,
+  "total_pnl": -0.3399999999999994,
+  "profit_factor": 0.97,
+  "max_drawdown": 0.85,
+  "expectancy": -0.068,
+  "criteria": {
+    "trades": false,
+    "wr": false,
+    "dd": true,
+    "pf": false,
+    "exp": false
+  },
+  "verdict": "NOT READY"
+}

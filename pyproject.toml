@@ -16,6 +16,10 @@ dependencies = [
     "pandas-ta>=0.3.0",
     "yfinance>=0.1.70",
     "requests>=2.26.0",
+    "Flask>=3.0,<4.0",
+    "Flask-Cors>=4.0,<5.0",
+    "Flask-Login>=0.6,<0.7",
+    "SQLAlchemy>=2.0,<3.0",
 ]
 
 [project.optional-dependencies]

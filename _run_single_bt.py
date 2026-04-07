@@ -18,11 +18,15 @@ try:
 
     print(f"BT_MIN_SMARTRANK = {K.BT_MIN_SMARTRANK}")
 
-    trades, equity_curve, params = run_backtest(
+    bt_result = run_backtest(
         date_from="2020-01-01",
         date_to="2026-03-01",
         progress_callback=lambda msg: print(f"  {msg}", flush=True),
     )
+    if len(bt_result) == 4:
+        trades, equity_curve, params, _extras = bt_result
+    else:
+        trades, equity_curve, params = bt_result
 
     print(f"Trades: {len(trades)}")
 

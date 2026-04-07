@@ -1,0 +1,232 @@
+========================================================================
+  EGX RADAR — HYBRID SYSTEM 6-YEAR VALIDATION
+  Generated: 2026-03-24 20:00:18
+========================================================================
+
+╔═══════════════════════════════════════════════════════════════╗
+║  PART 1: HYBRID SYSTEM CONFIGURATION                        ║
+╚═══════════════════════════════════════════════════════════════╝
+
+  SmartRank STRONG:     >= 70.0 (risk 0.50%)
+  SmartRank MEDIUM:     >= 45.0 (risk 0.25%)
+  Min SmartRank:        45.0
+  Max Open Trades:      3
+  Daily Top N:          2
+  Quality Gate:         5/10 soft checks (3 hard disqualifiers kept)
+  Regime:               BULL=all, NEUTRAL=STRONG only, BEAR=none
+  Max Stop Loss:        5.0%
+  Slippage:             0.5%
+  Fees:                 0.2%
+
+╔═══════════════════════════════════════════════════════════════╗
+║  PART 2: BEFORE vs AFTER COMPARISON                         ║
+╚═══════════════════════════════════════════════════════════════╝
+
+  Metric                          BEFORE        AFTER       Change
+  ─────────────────────────────────────────────────────────────────
+  Total Trades                         5           44          +39
+  Trades/Year                        0.8          7.1         +6.3
+  Win Rate %                       40.0%        52.3%       +12.3%
+  Total PnL %                     -0.34%      +23.38%      +23.72%
+  Profit Factor                     0.97         1.24        +0.27
+  Max Drawdown %                   0.57%        5.70%       +5.13%
+  Expectancy %/trade            -0.0680%     +0.5314%     +0.5994%
+  Avg Bars Held                      3.0          6.9         +3.9
+  Years with Trades                    3            6           +3
+
+╔═══════════════════════════════════════════════════════════════╗
+║  PART 3: CORE METRICS                                       ║
+╚═══════════════════════════════════════════════════════════════╝
+
+  Total Trades:         44
+  Trades/Year:          7.1
+  Missed Signals:       35
+  Win Rate:             52.3% (23W / 21L)
+  Total PnL:            +23.38%
+  Avg Return/Trade:     +0.53%
+  Avg Win:              +5.21%
+  Avg Loss:             -4.60%
+  Largest Win:          +8.03%
+  Largest Loss:         -5.85%
+  Profit Factor:        1.24
+  Expectancy:           +0.5314%/trade
+  Max Drawdown:         5.70%
+  Max Losing Streak:    5 trades
+  Avg Bars Held:        6.9
+
+╔═══════════════════════════════════════════════════════════════╗
+║  PART 4: STRONG vs MEDIUM PERFORMANCE                       ║
+╚═══════════════════════════════════════════════════════════════╝
+
+  STRONG (SR≥70):
+    Trades:       39
+    Win Rate:     51.3%
+    Total PnL:    +23.01%
+    Profit Factor:1.27
+    Max DD:       5.97%
+
+  MEDIUM (45≤SR<70):
+    Trades:       5
+    Win Rate:     60.0%
+    Total PnL:    +0.37%
+    Profit Factor:1.04
+    Max DD:       0.27%
+
+╔═══════════════════════════════════════════════════════════════╗
+║  PART 5: CONSISTENCY BY YEAR                                ║
+╚═══════════════════════════════════════════════════════════════╝
+
+  Year          Trades     WR%      PnL%     DD%      PF
+  ───────────────────────────────────────────────────────
+  2020               6   50.0%    +7.23%   0.54%    1.63
+  2021               5   20.0%    -9.70%   1.09%    0.20
+  2022               7   85.7%   +34.93%   0.52%    7.42
+  2023               8   37.5%   -16.78%   2.40%    0.39
+  2024               4   25.0%   -11.99%   1.54%    0.07
+  2025-26Q1         14   64.3%   +19.69%   1.83%    1.73
+
+╔═══════════════════════════════════════════════════════════════╗
+║  PART 6: RISK PROFILE                                       ║
+╚═══════════════════════════════════════════════════════════════╝
+
+  Symbol Distribution:
+    FWRY    : 5 trades, WR 40%, PnL -7.46%
+    HELI    : 4 trades, WR 50%, PnL +2.76%
+    HRHO    : 4 trades, WR 50%, PnL +4.77%
+    ABUK    : 3 trades, WR 100%, PnL +18.88%
+    ETEL    : 3 trades, WR 67%, PnL +4.96%
+    ISPH    : 3 trades, WR 33%, PnL -1.29%
+    TMGH    : 2 trades, WR 100%, PnL +13.16%
+    ADIB    : 2 trades, WR 50%, PnL +2.24%
+    MFPC    : 2 trades, WR 50%, PnL -0.03%
+    KZPC    : 2 trades, WR 0%, PnL -10.89%
+    JUFO    : 1 trades, WR 0%, PnL -5.19%
+    ESRS    : 1 trades, WR 100%, PnL +8.03%
+    FAIT    : 1 trades, WR 0%, PnL -5.12%
+    SKPC    : 1 trades, WR 0%, PnL -5.47%
+    SWDY    : 1 trades, WR 0%, PnL -0.50%
+    EAST    : 1 trades, WR 100%, PnL +2.10%
+    AMOC    : 1 trades, WR 100%, PnL +3.01%
+    OCDI    : 1 trades, WR 100%, PnL +0.96%
+    COMI    : 1 trades, WR 0%, PnL -3.60%
+    CIEB    : 1 trades, WR 0%, PnL -5.43%
+    CNFN    : 1 trades, WR 100%, PnL +2.79%
+    ORWE    : 1 trades, WR 0%, PnL -5.16%
+    PHDC    : 1 trades, WR 100%, PnL +4.85%
+    SAUD    : 1 trades, WR 100%, PnL +5.01%
+
+  Sector Distribution:
+    SERVICES            : 14 trades, PnL -8.08%
+    ENERGY              : 10 trades, PnL +19.16%
+    REAL_ESTATE         : 8 trades, PnL +21.73%
+    BANKS               : 7 trades, PnL -4.11%
+    INDUSTRIAL          : 5 trades, PnL -5.32%
+
+  Regime Distribution:
+    BULL        : 44 trades, WR 52%, PnL +23.38%
+
+  Partial TP Taken:     16/44 (36%)
+  Trailing Activated:   22/44 (50%)
+
+╔═══════════════════════════════════════════════════════════════╗
+║  PART 7: STABILITY ANALYSIS                                 ║
+╚═══════════════════════════════════════════════════════════════╝
+
+  Active Years:         6 / 6
+  Profitable Years:     3 / 6
+  Mean WR:              47.1%
+  WR Std Dev:           24.9%
+  WR CV:                0.53 (moderate)
+
+╔═══════════════════════════════════════════════════════════════╗
+║  FULL TRADE LOG                                             ║
+╚═══════════════════════════════════════════════════════════════╝
+
+    # Sym      Tier         Entry       Exit     PnL% Out     Bars    SR Period    
+  ─────────────────────────────────────────────────────────────────────────────────────
+    1 HELI     STRONG  2020-11-17 2020-11-22   +5.61% WIN        4    73 2020      
+    2 ABUK     STRONG  2020-11-17 2020-11-26   +5.14% WIN        8    77 2020      
+    3 JUFO     STRONG  2020-11-17 2020-12-01   -5.19% LOSS      11    79 2020      
+    4 ESRS     STRONG  2020-11-30 2020-12-14   +8.03% WIN       11    71 2020      
+    5 FAIT     MEDIUM  2020-12-06 2020-12-21   -5.12% LOSS      12    70 2020      
+    6 FWRY     STRONG  2020-12-20 2020-12-30   -1.24% EXIT       9    80 2020      
+    7 SKPC     STRONG  2021-12-13 2021-12-21   -5.47% LOSS       7    70 2021      
+    8 HELI     STRONG  2021-12-26 2021-12-28   -5.44% LOSS       3    70 2021      
+    9 ETEL     STRONG  2021-12-23 2021-12-30   +2.37% EXIT       6    76 2021      
+   10 SWDY     STRONG  2021-12-26 2021-12-30   -0.50% EXIT       5    79 2021      
+   11 ISPH     STRONG  2021-12-30 2021-12-30   -0.66% EXIT       1    81 2021      
+   12 HRHO     STRONG  2022-11-14 2022-11-30   +8.03% WIN       13    83 2022      
+   13 HELI     STRONG  2022-12-01 2022-12-04   +8.02% WIN        2    73 2022      
+   14 ETEL     STRONG  2022-11-27 2022-12-05   +8.03% WIN        7    72 2022      
+   15 TMGH     STRONG  2022-11-15 2022-12-07   +8.03% WIN       17    71 2022      
+   16 ADIB     STRONG  2022-12-12 2022-12-13   +6.16% WIN        2    79 2022      
+   17 EAST     STRONG  2022-12-08 2022-12-14   +2.10% WIN        5    75 2022      
+   18 MFPC     STRONG  2022-12-11 2022-12-20   -5.44% LOSS       8    80 2022      
+   19 ISPH     STRONG  2023-11-21 2023-11-26   +4.81% WIN        4    75 2023      
+   20 KZPC     STRONG  2023-11-20 2023-11-27   -5.45% LOSS       6    76 2023      
+   21 AMOC     STRONG  2023-11-20 2023-12-05   +3.01% WIN       12    75 2023      
+   22 HRHO     STRONG  2023-11-28 2023-12-06   -5.44% LOSS       7    79 2023      
+   23 FWRY     MEDIUM  2023-12-06 2023-12-11   +3.01% WIN        4    69 2023      
+   24 HELI     STRONG  2023-12-19 2023-12-21   -5.43% LOSS       3    71 2023      
+   25 HRHO     STRONG  2023-12-19 2023-12-25   -5.85% LOSS       5    80 2023      
+   26 KZPC     STRONG  2023-12-19 2023-12-25   -5.44% LOSS       5    71 2023      
+   27 ADIB     STRONG  2024-12-04 2024-12-10   -3.92% LOSS       5    76 2024      
+   28 OCDI     STRONG  2024-12-05 2024-12-10   +0.96% WIN        4    77 2024      
+   29 FWRY     STRONG  2024-12-08 2024-12-19   -5.43% LOSS      10    81 2024      
+   30 COMI     STRONG  2024-12-15 2024-12-29   -3.60% LOSS      11    73 2024      
+   31 FWRY     STRONG  2025-11-18 2025-11-24   -5.44% LOSS       5    75 2025-26Q1 
+   32 ISPH     STRONG  2025-11-24 2025-11-26   -5.44% LOSS       3    72 2025-26Q1 
+   33 CIEB     STRONG  2025-12-09 2025-12-11   -5.43% LOSS       3    76 2025-26Q1 
+   34 FWRY     STRONG  2025-12-09 2025-12-14   +1.64% WIN        4    76 2025-26Q1 
+   35 CNFN     MEDIUM  2025-12-09 2025-12-15   +2.79% WIN        5    70 2025-26Q1 
+   36 ETEL     STRONG  2025-12-15 2025-12-18   -5.44% LOSS       4    78 2025-26Q1 
+   37 ABUK     STRONG  2025-12-15 2025-12-30   +5.71% WIN       12    83 2025-26Q1 
+   38 MFPC     STRONG  2025-12-17 2025-12-30   +5.41% WIN       10    74 2025-26Q1 
+   39 ORWE     MEDIUM  2025-12-29 2026-01-14   -5.16% LOSS      11    68 2025-26Q1 
+   40 ABUK     STRONG  2026-01-20 2026-01-22   +8.03% WIN        3    73 2025-26Q1 
+   41 HRHO     STRONG  2026-01-21 2026-01-25   +8.03% WIN        3    75 2025-26Q1 
+   42 TMGH     STRONG  2026-02-03 2026-02-17   +5.13% WIN       11    82 2025-26Q1 
+   43 PHDC     MEDIUM  2026-02-04 2026-02-17   +4.85% WIN       10    66 2025-26Q1 
+   44 SAUD     STRONG  2026-02-02 2026-02-19   +5.01% WIN       14    77 2025-26Q1 
+
+╔═══════════════════════════════════════════════════════════════╗
+║  MISSED TRADES SUMMARY                                      ║
+╚═══════════════════════════════════════════════════════════════╝
+
+  Total Missed: 35
+    guard_blocked            : 24 (sim WR 38%, avg PnL -1.61%)
+    trigger_not_touched      : 11 (sim WR 27%, avg PnL -3.50%)
+
+========================================================================
+
+╔═══════════════════════════════════════════════════════════════╗
+║  DECISION ENGINE — FINAL VERDICT                            ║
+╚═══════════════════════════════════════════════════════════════╝
+
+  [PASS] Trades >= 30:        44 ✓
+  [FAIL] Win Rate >= 55%:     52.3% ✗
+  [FAIL] Max DD < 5%:         5.70% ✗
+  [PASS] Profit Factor > 1.2: 1.24 ✓
+  [PASS] Expectancy > 0:     +0.5314% ✓
+
+========================================================================
+
+  ████████████████████████████████████████████████████████
+  ██                                                    ██
+  ██   VERDICT:  ✗ NOT READY FOR REAL MONEY            ██
+  ██                                                    ██
+  ██   ✗ Low win rate                                    ██
+  ██   ✗ High drawdown                                   ██
+  ██                                                    ██
+  ████████████████████████████████████████████████████████
+
+  IMPROVEMENT vs PREVIOUS SYSTEM:
+    Trade count:    5 → 44 (+39, +780%)
+    Win rate:       40.0% → 52.3% (+12.3%)
+    Total PnL:      -0.34% → +23.38% (+23.72%)
+    Profit Factor:  0.97 → 1.24
+    Max Drawdown:   0.57% → 5.70%
+    Expectancy:     -0.0680% → +0.5314%
+
+  هل النظام جاهز للسوق الحقيقي؟  لا ✗ — مش جاهز
+========================================================================

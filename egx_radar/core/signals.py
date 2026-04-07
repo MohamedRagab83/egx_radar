@@ -5,9 +5,31 @@ import math
 from typing import Dict, List, Optional, Tuple
 
 from egx_radar.config.settings import K
-from egx_radar.core.scoring import score_tech_signal
 
 log = logging.getLogger(__name__)
+
+
+def score_tech_signal(
+    price: float, ema200: float, ema50: float, adx: float, rsi: float,
+    adaptive_mom: float, vol_ratio: float, breakout: bool, pct_ema200: float,
+) -> int:
+    """Raw integer signal score for build_signal(). Not normalised — used directly in signal classification."""
+    score = 0
+    if price > ema200:           score += 3
+    elif price > ema200 * 0.97:  score += 1
+    if price > ema50:            score += 1
+    if adx > K.ADX_STRONG:       score += 2
+    elif adx > K.ADX_MID:        score += 1
+    if 55 < rsi < 70:            score += 3
+    elif 48 <= rsi <= 55:        score += 1
+    if adaptive_mom > 2:         score += 3
+    elif adaptive_mom > 0:       score += 2
+    elif adaptive_mom > -1:      score += 1
+    if vol_ratio > 1.5:          score += 2
+    elif vol_ratio > 1.2:        score += 1
+    if breakout:                 score += 2
+    if pct_ema200 > 35:          score -= 2
+    return max(0, score)
 
 
 # ═══════════════════════════════════════════════════════════════════════════

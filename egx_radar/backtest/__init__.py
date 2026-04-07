@@ -9,11 +9,15 @@ log = logging.getLogger(__name__)
 from egx_radar.backtest.data_loader import load_backtest_data
 from egx_radar.backtest.engine import run_backtest
 from egx_radar.backtest.metrics import compute_metrics
+from egx_radar.backtest.missed_trades import run_missed_trade_analysis
+from egx_radar.backtest.tracking_dashboard import run_dashboard
 
 __all__ = [
     "load_backtest_data",
     "run_backtest",
     "compute_metrics",
+    "run_missed_trade_analysis",
+    "run_dashboard",
 ]
 
 
