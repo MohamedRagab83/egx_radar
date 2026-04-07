@@ -7,9 +7,9 @@ yfinance>=0.2.40,<0.3
 pandas>=2.0,<3.0
 
 # ── Technical analysis ───────────────────────────────────────────────────
-# WARNING: pandas_ta has known thread-safety issues in some versions.
+# Railway / Python 3.11-safe package that still provides `import pandas_ta`.
 # After upgrading, test with SCAN_MAX_WORKERS=1 before going live.
-pandas_ta>=0.3.14b0
+pandas-ta-classic>=0.3.15,<0.5
 
 # ── HTTP ─────────────────────────────────────────────────────────────────
 requests>=2.31,<3.0
